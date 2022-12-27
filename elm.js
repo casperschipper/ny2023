@@ -5242,9 +5242,14 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$document = _Browser_document;
+var $author$project$Main$C = {$: 'C'};
 var $author$project$Main$GraphEntry = function (a) {
 	return {$: 'GraphEntry', a: a};
 };
+var $author$project$Main$Note = F2(
+	function (a, b) {
+		return {$: 'Note', a: a, b: b};
+	});
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5290,6 +5295,7 @@ var $author$project$Main$initGraph = function () {
 				array: $elm$core$Array$fromList(
 					_List_fromArray(
 						[nextSlot])),
+				note: A2($author$project$Main$Note, 3, $author$project$Main$C),
 				value: $elm$core$String$fromInt(nextSlot)
 			});
 	};
@@ -5736,6 +5742,149 @@ var $author$project$Main$subscriptions = function (_v0) {
 				$author$project$Main$start($author$project$Main$Start)
 			]));
 };
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (_v0.$ === 'SubTree') {
+			var subTree = _v0.a;
+			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _v0.a;
+			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var $elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4($elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$handleChangedInput = F3(
+	function (idx, str, model) {
+		var parseInts = A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					if (x.$ === 'Just') {
+						var xx = x.a;
+						return A2($elm$core$List$cons, xx, acc);
+					} else {
+						return acc;
+					}
+				}),
+			_List_Nil,
+			A2(
+				$elm$core$List$map,
+				$elm$core$String$toInt,
+				A2($elm$core$String$split, ' ', str)));
+		var entry = $author$project$Main$GraphEntry(
+			{
+				array: $elm$core$Array$fromList(parseInts),
+				note: A2(
+					$elm$core$Maybe$withDefault,
+					A2($author$project$Main$Note, 3, $author$project$Main$C),
+					A2(
+						$elm$core$Maybe$map,
+						function (_v0) {
+							var g = _v0.a;
+							return g.note;
+						},
+						A2($elm$core$Array$get, idx, model.graph))),
+				value: str
+			});
+		return _Utils_update(
+			model,
+			{
+				graph: A3($elm$core$Array$set, idx, entry, model.graph)
+			});
+	});
 var $author$project$Main$GeneratedNext = function (a) {
 	return {$: 'GeneratedNext', a: a};
 };
@@ -5746,7 +5895,6 @@ var $elm$random$Random$Seed = F2(
 	function (a, b) {
 		return {$: 'Seed', a: a, b: b};
 	});
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$random$Random$next = function (_v0) {
 	var state0 = _v0.a;
 	var incr = _v0.b;
@@ -5836,47 +5984,6 @@ var $elm$random$Random$constant = function (value) {
 			return _Utils_Tuple2(value, seed);
 		});
 };
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
-	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
@@ -5922,15 +6029,6 @@ var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$generateNext = function (possible) {
 	var n = $elm$core$Array$length(possible);
 	if (!n) {
@@ -5948,50 +6046,133 @@ var $author$project$Main$generateNext = function (possible) {
 			A2($elm$random$Random$int, 0, nonZero - 1));
 	}
 };
+var $author$project$Main$handleTick = function (model) {
+	var mOptions = A2($elm$core$Array$get, model.current, model.graph);
+	if (mOptions.$ === 'Nothing') {
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{current: 0}),
+			$elm$core$Platform$Cmd$none);
+	} else {
+		var g = mOptions.a.a;
+		var cmds = $elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					A2(
+					$elm$random$Random$generate,
+					$author$project$Main$GeneratedNext,
+					$author$project$Main$generateNext(g.array))
+				]));
+		return _Utils_Tuple2(model, cmds);
+	}
+};
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$int);
-var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
-var $elm$core$Array$setHelp = F4(
-	function (shift, index, value, tree) {
-		var pos = $elm$core$Array$bitMask & (index >>> shift);
-		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-		if (_v0.$ === 'SubTree') {
-			var subTree = _v0.a;
-			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$SubTree(newSub),
-				tree);
+var $elm$core$Debug$log = _Debug_log;
+var $author$project$Main$withOctave = F2(
+	function (o, _v0) {
+		var p = _v0.b;
+		return A2($author$project$Main$Note, o, p);
+	});
+var $author$project$Main$selectedOctave = F3(
+	function (idx, octStr, model) {
+		var moctave = $elm$core$String$toInt(octStr);
+		var mentry = A2($elm$core$Array$get, idx, model.graph);
+		var _v0 = _Utils_Tuple2(mentry, moctave);
+		if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+			var g = _v0.a.a.a;
+			var oct = _v0.b.a;
+			return _Utils_update(
+				model,
+				{
+					graph: A3(
+						$elm$core$Array$set,
+						idx,
+						$author$project$Main$GraphEntry(
+							_Utils_update(
+								g,
+								{
+									note: A2($author$project$Main$withOctave, oct, g.note)
+								})),
+						model.graph)
+				});
 		} else {
-			var values = _v0.a;
-			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$Leaf(newLeaf),
-				tree);
+			var _v1 = $elm$core$Debug$log('cannot find the note');
+			return model;
 		}
 	});
-var $elm$core$Array$set = F3(
-	function (index, value, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			tree,
-			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A4($elm$core$Array$setHelp, startShift, index, value, tree),
-			tail));
+var $author$project$Main$A = {$: 'A'};
+var $author$project$Main$ASharp = {$: 'ASharp'};
+var $author$project$Main$B = {$: 'B'};
+var $author$project$Main$CSharp = {$: 'CSharp'};
+var $author$project$Main$D = {$: 'D'};
+var $author$project$Main$DSharp = {$: 'DSharp'};
+var $author$project$Main$E = {$: 'E'};
+var $author$project$Main$F = {$: 'F'};
+var $author$project$Main$FSharp = {$: 'FSharp'};
+var $author$project$Main$G = {$: 'G'};
+var $author$project$Main$GSharp = {$: 'GSharp'};
+var $author$project$Main$stringToPitchclass = function (p) {
+	switch (p) {
+		case 'C':
+			return $elm$core$Maybe$Just($author$project$Main$C);
+		case 'C#':
+			return $elm$core$Maybe$Just($author$project$Main$CSharp);
+		case 'D':
+			return $elm$core$Maybe$Just($author$project$Main$D);
+		case 'D#':
+			return $elm$core$Maybe$Just($author$project$Main$DSharp);
+		case 'E':
+			return $elm$core$Maybe$Just($author$project$Main$E);
+		case 'F':
+			return $elm$core$Maybe$Just($author$project$Main$F);
+		case 'F#':
+			return $elm$core$Maybe$Just($author$project$Main$FSharp);
+		case 'G':
+			return $elm$core$Maybe$Just($author$project$Main$G);
+		case 'G#':
+			return $elm$core$Maybe$Just($author$project$Main$GSharp);
+		case 'A':
+			return $elm$core$Maybe$Just($author$project$Main$A);
+		case 'A#':
+			return $elm$core$Maybe$Just($author$project$Main$ASharp);
+		case 'B':
+			return $elm$core$Maybe$Just($author$project$Main$B);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$withPitchClass = F2(
+	function (pi, _v0) {
+		var o = _v0.a;
+		return A2($author$project$Main$Note, o, pi);
+	});
+var $author$project$Main$selectedPitch = F3(
+	function (idx, pitchStr, model) {
+		var mpitch = $author$project$Main$stringToPitchclass(pitchStr);
+		var mentry = A2($elm$core$Array$get, idx, model.graph);
+		var _v0 = _Utils_Tuple2(mentry, mpitch);
+		if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+			var g = _v0.a.a.a;
+			var pi = _v0.b.a;
+			return _Utils_update(
+				model,
+				{
+					graph: A3(
+						$elm$core$Array$set,
+						idx,
+						$author$project$Main$GraphEntry(
+							_Utils_update(
+								g,
+								{
+									note: A2($author$project$Main$withPitchClass, pi, g.note)
+								})),
+						model.graph)
+				});
+		} else {
+			return model;
+		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -5999,53 +6180,11 @@ var $author$project$Main$update = F2(
 			case 'ChangedInput':
 				var idx = msg.a;
 				var str = msg.b;
-				var parseInts = A3(
-					$elm$core$List$foldr,
-					F2(
-						function (x, acc) {
-							if (x.$ === 'Just') {
-								var xx = x.a;
-								return A2($elm$core$List$cons, xx, acc);
-							} else {
-								return acc;
-							}
-						}),
-					_List_Nil,
-					A2(
-						$elm$core$List$map,
-						$elm$core$String$toInt,
-						A2($elm$core$String$split, ' ', str)));
-				var entry = $author$project$Main$GraphEntry(
-					{
-						array: $elm$core$Array$fromList(parseInts),
-						value: str
-					});
-				var newModel = _Utils_update(
-					model,
-					{
-						graph: A3($elm$core$Array$set, idx, entry, model.graph)
-					});
-				return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2(
+					A3($author$project$Main$handleChangedInput, idx, str, model),
+					$elm$core$Platform$Cmd$none);
 			case 'Tick':
-				var mOptions = A2($elm$core$Array$get, model.current, model.graph);
-				if (mOptions.$ === 'Nothing') {
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{current: 0}),
-						$elm$core$Platform$Cmd$none);
-				} else {
-					var g = mOptions.a.a;
-					var cmds = $elm$core$Platform$Cmd$batch(
-						_List_fromArray(
-							[
-								A2(
-								$elm$random$Random$generate,
-								$author$project$Main$GeneratedNext,
-								$author$project$Main$generateNext(g.array))
-							]));
-					return _Utils_Tuple2(model, cmds);
-				}
+				return $author$project$Main$handleTick(model);
 			case 'GeneratedNext':
 				var x = msg.a;
 				return _Utils_Tuple2(
@@ -6053,8 +6192,20 @@ var $author$project$Main$update = F2(
 						model,
 						{current: x}),
 					$author$project$Main$playNote(model.current));
-			default:
+			case 'Start':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'SelectedOctave':
+				var idx = msg.a;
+				var octStr = msg.b;
+				return _Utils_Tuple2(
+					A3($author$project$Main$selectedOctave, idx, octStr, model),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var idx = msg.a;
+				var pitchStr = msg.b;
+				return _Utils_Tuple2(
+					A3($author$project$Main$selectedPitch, idx, pitchStr, model),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $elm$html$Html$br = _VirtualDom_node('br');
@@ -6135,16 +6286,6 @@ var $elm$core$Array$map = F2(
 			A2($elm$core$Elm$JsArray$map, helper, tree),
 			A2($elm$core$Elm$JsArray$map, func, tail));
 	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
@@ -6153,6 +6294,15 @@ var $author$project$Main$ChangedInput = F2(
 	function (a, b) {
 		return {$: 'ChangedInput', a: a, b: b};
 	});
+var $author$project$Main$SelectedOctave = F2(
+	function (a, b) {
+		return {$: 'SelectedOctave', a: a, b: b};
+	});
+var $author$project$Main$SelectedPitch = F2(
+	function (a, b) {
+		return {$: 'SelectedPitch', a: a, b: b};
+	});
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -6188,6 +6338,17 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6197,18 +6358,129 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$selectOctave = F2(
+	function (toMsg, currentOct) {
+		var options = A2(
+			$elm$core$List$map,
+			function (o) {
+				var os = $elm$core$String$fromInt(o);
+				return A2(
+					$elm$html$Html$option,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$selected(
+							_Utils_eq(o, currentOct)),
+							$elm$html$Html$Attributes$value(os)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(os)
+						]));
+			},
+			_List_fromArray(
+				[0, 1, 2, 3, 4, 5, 6]));
+		return A2(
+			$elm$html$Html$select,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onInput(toMsg)
+				]),
+			options);
+	});
+var $author$project$Main$allPitchClasses = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
+var $author$project$Main$pAsString = function (p) {
+	switch (p.$) {
+		case 'C':
+			return 'C';
+		case 'CSharp':
+			return 'C#';
+		case 'D':
+			return 'D';
+		case 'DSharp':
+			return 'D#';
+		case 'E':
+			return 'E';
+		case 'F':
+			return 'F';
+		case 'FSharp':
+			return 'F#';
+		case 'G':
+			return 'G';
+		case 'GSharp':
+			return 'G#';
+		case 'A':
+			return 'A';
+		case 'ASharp':
+			return 'A#';
+		default:
+			return 'B';
+	}
+};
+var $author$project$Main$selectPitch = F2(
+	function (onSelect, currentPitch) {
+		var options = A2(
+			$elm$core$List$map,
+			function (p) {
+				var ps = $author$project$Main$pAsString(p);
+				return A2(
+					$elm$html$Html$option,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$value(ps),
+							$elm$html$Html$Attributes$selected(
+							_Utils_eq(
+								ps,
+								$author$project$Main$pAsString(currentPitch)))
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(ps)
+						]));
+			},
+			$author$project$Main$allPitchClasses);
+		return A2(
+			$elm$html$Html$select,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onInput(onSelect)
+				]),
+			options);
+	});
 var $author$project$Main$viewEntry = F2(
 	function (idx, _v0) {
 		var g = _v0.a;
+		var _v1 = function () {
+			var _v2 = g.note;
+			var o = _v2.a;
+			var p = _v2.b;
+			return _Utils_Tuple2(o, p);
+		}();
+		var octave = _v1.a;
+		var pitch = _v1.b;
 		return A2(
-			$elm$html$Html$input,
+			$elm$html$Html$div,
+			_List_Nil,
 			_List_fromArray(
 				[
-					$elm$html$Html$Events$onInput(
-					$author$project$Main$ChangedInput(idx)),
-					$elm$html$Html$Attributes$value(g.value)
-				]),
-			_List_Nil);
+					A2(
+					$author$project$Main$selectOctave,
+					$author$project$Main$SelectedOctave(idx),
+					octave),
+					A2(
+					$author$project$Main$selectPitch,
+					$author$project$Main$SelectedPitch(idx),
+					pitch),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onInput(
+							$author$project$Main$ChangedInput(idx)),
+							$elm$html$Html$Attributes$value(g.value)
+						]),
+					_List_Nil)
+				]));
 	});
 var $author$project$Main$view = function (model) {
 	var entries = $elm$core$Array$toList(

@@ -1,15 +1,15 @@
 port module Main exposing (..)
 
 -- TODO
-
 {-
 
-1. select pitches in dropdowns
-2. render some graphics
-3. open and close dialogs
+   1. select pitches in dropdowns
+   2. render some graphics
+   3. open and close dialogs
 
 
 -}
+
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, button, div, input, text)
@@ -64,6 +64,16 @@ type Note
     = Note Octave PitchClass
 
 
+withOctave : Octave -> Note -> Note
+withOctave o (Note _ p) =
+    Note o p
+
+
+withPitchClass : PitchClass -> Note -> Note
+withPitchClass pi (Note o _) =
+    Note o pi
+
+
 pAsString : PitchClass -> String
 pAsString p =
     case p of
@@ -104,6 +114,49 @@ pAsString p =
             "B"
 
 
+stringToPitchclass : String -> Maybe PitchClass
+stringToPitchclass p =
+    case p of
+        "C" ->
+            Just C
+
+        "C#" ->
+            Just CSharp
+
+        "D" ->
+            Just D
+
+        "D#" ->
+            Just DSharp
+
+        "E" ->
+            Just E
+
+        "F" ->
+            Just F
+
+        "F#" ->
+            Just FSharp
+
+        "G" ->
+            Just G
+
+        "G#" ->
+            Just GSharp
+
+        "A" ->
+            Just A
+
+        "A#" ->
+            Just ASharp
+
+        "B" ->
+            Just B
+
+        _ ->
+            Nothing
+
+
 asString : Note -> String
 asString (Note oct pitch) =
     pAsString pitch ++ String.fromInt oct
@@ -126,8 +179,8 @@ selectPitch onSelect currentPitch =
     Html.select [ Events.onInput onSelect ] options
 
 
-selectOctave : Octave -> Html Msg
-selectOctave currentOct =
+selectOctave : (String -> msg) -> Octave -> Html msg
+selectOctave toMsg currentOct =
     let
         options =
             [ 0, 1, 2, 3, 4, 5, 6 ]
@@ -137,10 +190,10 @@ selectOctave currentOct =
                             os =
                                 String.fromInt o
                         in
-                        Html.option [ Attr.value os ] [ Html.text os ]
+                        Html.option [ Attr.selected (o == currentOct), Attr.value os ] [ Html.text os ]
                     )
     in
-    Html.select [] options
+    Html.select [ Events.onInput toMsg ] options
 
 
 
@@ -173,6 +226,7 @@ type GraphEntry
     = GraphEntry
         { array : Array Int
         , value : String
+        , note : Note
         }
 
 
@@ -195,7 +249,7 @@ initGraph =
                 nextSlot =
                     modBy graphSize (idx + 1)
             in
-            GraphEntry { value = String.fromInt nextSlot, array = [ nextSlot ] |> Array.fromList }
+            GraphEntry { value = String.fromInt nextSlot, array = [ nextSlot ] |> Array.fromList, note = Note 3 C }
     in
     Array.initialize graphSize fromIndex
 
@@ -218,6 +272,8 @@ type Msg
     | Tick Posix
     | GeneratedNext Int
     | Start {}
+    | SelectedOctave Int String
+    | SelectedPitch Int String
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -238,51 +294,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangedInput idx str ->
-            let
-                parseInts =
-                    String.split " " str
-                        |> List.map String.toInt
-                        |> List.foldr
-                            (\x acc ->
-                                case x of
-                                    Just xx ->
-                                        xx :: acc
-
-                                    Nothing ->
-                                        acc
-                            )
-                            []
-
-                entry =
-                    GraphEntry
-                        { value = str
-                        , array = Array.fromList parseInts
-                        }
-
-                newModel =
-                    { model | graph = Array.set idx entry model.graph }
-            in
-            ( newModel, Cmd.none )
+            ( handleChangedInput idx str model, Cmd.none )
 
         Tick _ ->
-            let
-                mOptions =
-                    Array.get model.current model.graph
-            in
-            case mOptions of
-                Nothing ->
-                    ( { model | current = 0 }, Cmd.none )
-
-                Just (GraphEntry g) ->
-                    let
-                        cmds =
-                            Cmd.batch
-                                [ Random.generate GeneratedNext (generateNext g.array)
-                                ]
-                    in
-                    ( model
-                    , cmds
-                    )
+            handleTick model
 
         GeneratedNext x ->
             ( { model | current = x }, playNote model.current )
@@ -290,10 +305,114 @@ update msg model =
         Start {} ->
             ( model, Cmd.none )
 
+        SelectedOctave idx octStr ->
+            ( selectedOctave idx octStr model, Cmd.none )
+
+        SelectedPitch idx pitchStr ->
+            ( selectedPitch idx pitchStr model, Cmd.none )
+
+
+selectedOctave idx octStr model =
+    let
+        mentry =
+            Array.get idx model.graph
+
+        moctave =
+            String.toInt octStr
+    in
+    case ( mentry, moctave ) of
+        ( Just (GraphEntry g), Just oct ) ->
+            { model | graph = Array.set idx (GraphEntry { g | note = withOctave oct g.note }) model.graph }
+
+        ( _, _ ) ->
+            let
+                _ =
+                    Debug.log "cannot find the note"
+            in
+            model
+
+
+selectedPitch idx pitchStr model =
+    let
+        mentry =
+            Array.get idx model.graph
+
+        mpitch =
+            stringToPitchclass pitchStr
+    in
+    case ( mentry, mpitch ) of
+        ( Just (GraphEntry g), Just pi ) ->
+            { model | graph = Array.set idx (GraphEntry { g | note = withPitchClass pi g.note }) model.graph }
+
+        ( _, _ ) ->
+            model
+
+
+handleTick : Model -> ( Model, Cmd Msg )
+handleTick model =
+    let
+        mOptions =
+            Array.get model.current model.graph
+    in
+    case mOptions of
+        Nothing ->
+            ( { model | current = 0 }, Cmd.none )
+
+        Just (GraphEntry g) ->
+            let
+                cmds =
+                    Cmd.batch
+                        [ Random.generate GeneratedNext (generateNext g.array)
+                        ]
+            in
+            ( model
+            , cmds
+            )
+
+
+handleChangedInput : Int -> String -> Model -> Model
+handleChangedInput idx str model =
+    let
+        parseInts =
+            String.split " " str
+                |> List.map String.toInt
+                |> List.foldr
+                    (\x acc ->
+                        case x of
+                            Just xx ->
+                                xx :: acc
+
+                            Nothing ->
+                                acc
+                    )
+                    []
+
+        entry =
+            GraphEntry
+                { value = str
+                , array = Array.fromList parseInts
+                , note =
+                    Array.get idx model.graph
+                        |> Maybe.map (\(GraphEntry g) -> g.note)
+                        |> Maybe.withDefault (Note 3 C)
+                }
+    in
+    { model | graph = Array.set idx entry model.graph }
+
 
 viewEntry : Int -> GraphEntry -> Html Msg
 viewEntry idx (GraphEntry g) =
-    Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
+    let
+        (  octave, pitch ) =
+            case g.note of
+                Note o p ->
+                    ( o, p )
+    in
+    Html.div []
+        [ selectOctave (SelectedOctave idx) octave
+        , selectPitch (SelectedPitch idx) pitch
+        , Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
+        ]
 
 
 
