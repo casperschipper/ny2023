@@ -3,9 +3,10 @@ port module Main exposing (..)
 -- TODO
 {-
 
-   1. select pitches in dropdowns
-   2. render some graphics
-   3. open and close dialogs
+   - Canon!
+   - save state
+   - render some graphics
+   - open and close dialogs
 
 
 -}
@@ -157,6 +158,23 @@ stringToPitchclass p =
             Nothing
 
 
+randomNote : Random.Generator Note
+randomNote =
+    let
+        randClass =
+            Random.int 0 (List.length allPitchClasses)
+                |> Random.map
+                    (\idx ->
+                        Array.get idx (Array.fromList allPitchClasses)
+                            |> Maybe.withDefault C
+                    )
+
+        oct =
+            Random.int 1 5
+    in
+    Random.map2 Note oct randClass
+
+
 asString : Note -> String
 asString (Note oct pitch) =
     pAsString pitch ++ String.fromInt oct
@@ -208,7 +226,7 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Time.every 250.0 Tick
+        [ Time.every 125.0 Tick
         , start Start
         ]
 
@@ -274,6 +292,8 @@ type Msg
     | Start {}
     | SelectedOctave Int String
     | SelectedPitch Int String
+    | TriggerRandomNote Int
+    | SetNote Int Note
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -288,6 +308,20 @@ generateNext possible =
 
         nonZero ->
             Random.int 0 (nonZero - 1) |> Random.map (\idx -> Array.get idx possible |> Maybe.withDefault -1)
+
+
+setNote : Int -> Note -> Model -> Model
+setNote idx note model =
+    let
+        mentry =
+            Array.get idx model.graph
+    in
+    case mentry of
+        Just (GraphEntry g) ->
+            { model | graph = Array.set idx (GraphEntry { g | note = note }) model.graph }
+
+        Nothing ->
+            model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -311,12 +345,19 @@ update msg model =
         SelectedPitch idx pitchStr ->
             ( selectedPitch idx pitchStr model, Cmd.none )
 
+        SetNote idx note ->
+            ( setNote idx note model, Cmd.none )
+
+        TriggerRandomNote idx ->
+            (model, Random.generate (SetNote idx) randomNote )
+
 
 lookupSelectedNote idx array =
-    Array.get idx array 
-    |> Maybe.map (\(GraphEntry g) -> g.note)
-    |> Maybe.withDefault (Note 3 C) 
-    |> asString
+    Array.get idx array
+        |> Maybe.map (\(GraphEntry g) -> g.note)
+        |> Maybe.withDefault (Note 3 C)
+        |> asString
+
 
 selectedOctave idx octStr model =
     let
@@ -415,8 +456,10 @@ viewEntry idx (GraphEntry g) =
                     ( o, p )
     in
     Html.div []
-        [ selectOctave (SelectedOctave idx) octave
+        [ Html.text ("#" ++ String.fromInt idx)
+        , selectOctave (SelectedOctave idx) octave
         , selectPitch (SelectedPitch idx) pitch
+        , Html.button [ Events.onClick (TriggerRandomNote idx) ] [Html.text "RND!" ]
         , Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
         ]
 

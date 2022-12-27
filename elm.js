@@ -5738,12 +5738,106 @@ var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				A2($elm$time$Time$every, 250.0, $author$project$Main$Tick),
+				A2($elm$time$Time$every, 125.0, $author$project$Main$Tick),
 				$author$project$Main$start($author$project$Main$Start)
 			]));
 };
-var $elm$core$Bitwise$and = _Bitwise_and;
+var $author$project$Main$SetNote = F2(
+	function (a, b) {
+		return {$: 'SetNote', a: a, b: b};
+	});
+var $elm$random$Random$Generate = function (a) {
+	return {$: 'Generate', a: a};
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$random$Random$init = A2(
+	$elm$core$Task$andThen,
+	function (time) {
+		return $elm$core$Task$succeed(
+			$elm$random$Random$initialSeed(
+				$elm$time$Time$posixToMillis(time)));
+	},
+	$elm$time$Time$now);
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $elm$random$Random$onEffects = F3(
+	function (router, commands, seed) {
+		if (!commands.b) {
+			return $elm$core$Task$succeed(seed);
+		} else {
+			var generator = commands.a.a;
+			var rest = commands.b;
+			var _v1 = A2($elm$random$Random$step, generator, seed);
+			var value = _v1.a;
+			var newSeed = _v1.b;
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$random$Random$onEffects, router, rest, newSeed);
+				},
+				A2($elm$core$Platform$sendToApp, router, value));
+		}
+	});
+var $elm$random$Random$onSelfMsg = F3(
+	function (_v0, _v1, seed) {
+		return $elm$core$Task$succeed(seed);
+	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$random$Random$cmdMap = F2(
+	function (func, _v0) {
+		var generator = _v0.a;
+		return $elm$random$Random$Generate(
+			A2($elm$random$Random$map, func, generator));
+	});
+_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
+var $elm$random$Random$command = _Platform_leaf('Random');
+var $elm$random$Random$generate = F2(
+	function (tagger, generator) {
+		return $elm$random$Random$command(
+			$elm$random$Random$Generate(
+				A2($elm$random$Random$map, tagger, generator)));
+	});
+var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -5888,96 +5982,6 @@ var $author$project$Main$handleChangedInput = F3(
 var $author$project$Main$GeneratedNext = function (a) {
 	return {$: 'GeneratedNext', a: a};
 };
-var $elm$random$Random$Generate = function (a) {
-	return {$: 'Generate', a: a};
-};
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
-var $elm$random$Random$initialSeed = function (x) {
-	var _v0 = $elm$random$Random$next(
-		A2($elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _v0.a;
-	var incr = _v0.b;
-	var state2 = (state1 + x) >>> 0;
-	return $elm$random$Random$next(
-		A2($elm$random$Random$Seed, state2, incr));
-};
-var $elm$time$Time$posixToMillis = function (_v0) {
-	var millis = _v0.a;
-	return millis;
-};
-var $elm$random$Random$init = A2(
-	$elm$core$Task$andThen,
-	function (time) {
-		return $elm$core$Task$succeed(
-			$elm$random$Random$initialSeed(
-				$elm$time$Time$posixToMillis(time)));
-	},
-	$elm$time$Time$now);
-var $elm$random$Random$step = F2(
-	function (_v0, seed) {
-		var generator = _v0.a;
-		return generator(seed);
-	});
-var $elm$random$Random$onEffects = F3(
-	function (router, commands, seed) {
-		if (!commands.b) {
-			return $elm$core$Task$succeed(seed);
-		} else {
-			var generator = commands.a.a;
-			var rest = commands.b;
-			var _v1 = A2($elm$random$Random$step, generator, seed);
-			var value = _v1.a;
-			var newSeed = _v1.b;
-			return A2(
-				$elm$core$Task$andThen,
-				function (_v2) {
-					return A3($elm$random$Random$onEffects, router, rest, newSeed);
-				},
-				A2($elm$core$Platform$sendToApp, router, value));
-		}
-	});
-var $elm$random$Random$onSelfMsg = F3(
-	function (_v0, _v1, seed) {
-		return $elm$core$Task$succeed(seed);
-	});
-var $elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var $elm$random$Random$map = F2(
-	function (func, _v0) {
-		var genA = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v1 = genA(seed0);
-				var a = _v1.a;
-				var seed1 = _v1.b;
-				return _Utils_Tuple2(
-					func(a),
-					seed1);
-			});
-	});
-var $elm$random$Random$cmdMap = F2(
-	function (func, _v0) {
-		var generator = _v0.a;
-		return $elm$random$Random$Generate(
-			A2($elm$random$Random$map, func, generator));
-	});
-_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
-var $elm$random$Random$command = _Platform_leaf('Random');
-var $elm$random$Random$generate = F2(
-	function (tagger, generator) {
-		return $elm$random$Random$command(
-			$elm$random$Random$Generate(
-				A2($elm$random$Random$map, tagger, generator)));
-	});
 var $elm$random$Random$constant = function (value) {
 	return $elm$random$Random$Generator(
 		function (seed) {
@@ -6118,6 +6122,55 @@ var $author$project$Main$lookupSelectedNote = F2(
 	});
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
+var $author$project$Main$A = {$: 'A'};
+var $author$project$Main$ASharp = {$: 'ASharp'};
+var $author$project$Main$B = {$: 'B'};
+var $author$project$Main$CSharp = {$: 'CSharp'};
+var $author$project$Main$D = {$: 'D'};
+var $author$project$Main$DSharp = {$: 'DSharp'};
+var $author$project$Main$E = {$: 'E'};
+var $author$project$Main$F = {$: 'F'};
+var $author$project$Main$FSharp = {$: 'FSharp'};
+var $author$project$Main$G = {$: 'G'};
+var $author$project$Main$GSharp = {$: 'GSharp'};
+var $author$project$Main$allPitchClasses = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
+var $elm$random$Random$map2 = F3(
+	function (func, _v0, _v1) {
+		var genA = _v0.a;
+		var genB = _v1.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v2 = genA(seed0);
+				var a = _v2.a;
+				var seed1 = _v2.b;
+				var _v3 = genB(seed1);
+				var b = _v3.a;
+				var seed2 = _v3.b;
+				return _Utils_Tuple2(
+					A2(func, a, b),
+					seed2);
+			});
+	});
+var $author$project$Main$randomNote = function () {
+	var randClass = A2(
+		$elm$random$Random$map,
+		function (idx) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Main$C,
+				A2(
+					$elm$core$Array$get,
+					idx,
+					$elm$core$Array$fromList($author$project$Main$allPitchClasses)));
+		},
+		A2(
+			$elm$random$Random$int,
+			0,
+			$elm$core$List$length($author$project$Main$allPitchClasses)));
+	var oct = A2($elm$random$Random$int, 1, 5);
+	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
+}();
 var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$withOctave = F2(
 	function (o, _v0) {
@@ -6151,17 +6204,6 @@ var $author$project$Main$selectedOctave = F3(
 			return model;
 		}
 	});
-var $author$project$Main$A = {$: 'A'};
-var $author$project$Main$ASharp = {$: 'ASharp'};
-var $author$project$Main$B = {$: 'B'};
-var $author$project$Main$CSharp = {$: 'CSharp'};
-var $author$project$Main$D = {$: 'D'};
-var $author$project$Main$DSharp = {$: 'DSharp'};
-var $author$project$Main$E = {$: 'E'};
-var $author$project$Main$F = {$: 'F'};
-var $author$project$Main$FSharp = {$: 'FSharp'};
-var $author$project$Main$G = {$: 'G'};
-var $author$project$Main$GSharp = {$: 'GSharp'};
 var $author$project$Main$stringToPitchclass = function (p) {
 	switch (p) {
 		case 'C':
@@ -6223,6 +6265,27 @@ var $author$project$Main$selectedPitch = F3(
 			return model;
 		}
 	});
+var $author$project$Main$setNote = F3(
+	function (idx, note, model) {
+		var mentry = A2($elm$core$Array$get, idx, model.graph);
+		if (mentry.$ === 'Just') {
+			var g = mentry.a.a;
+			return _Utils_update(
+				model,
+				{
+					graph: A3(
+						$elm$core$Array$set,
+						idx,
+						$author$project$Main$GraphEntry(
+							_Utils_update(
+								g,
+								{note: note})),
+						model.graph)
+				});
+		} else {
+			return model;
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6250,12 +6313,26 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					A3($author$project$Main$selectedOctave, idx, octStr, model),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'SelectedPitch':
 				var idx = msg.a;
 				var pitchStr = msg.b;
 				return _Utils_Tuple2(
 					A3($author$project$Main$selectedPitch, idx, pitchStr, model),
 					$elm$core$Platform$Cmd$none);
+			case 'SetNote':
+				var idx = msg.a;
+				var note = msg.b;
+				return _Utils_Tuple2(
+					A3($author$project$Main$setNote, idx, note, model),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var idx = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$elm$random$Random$generate,
+						$author$project$Main$SetNote(idx),
+						$author$project$Main$randomNote));
 		}
 	});
 var $elm$html$Html$br = _VirtualDom_node('br');
@@ -6352,15 +6429,35 @@ var $author$project$Main$SelectedPitch = F2(
 	function (a, b) {
 		return {$: 'SelectedPitch', a: a, b: b};
 	});
+var $author$project$Main$TriggerRandomNote = function (a) {
+	return {$: 'TriggerRandomNote', a: a};
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 'MayStopPropagation', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$stopPropagationOn = F2(
 	function (event, decoder) {
 		return A2(
@@ -6436,8 +6533,6 @@ var $author$project$Main$selectOctave = F2(
 				]),
 			options);
 	});
-var $author$project$Main$allPitchClasses = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
 var $author$project$Main$selectPitch = F2(
 	function (onSelect, currentPitch) {
 		var options = A2(
@@ -6484,6 +6579,8 @@ var $author$project$Main$viewEntry = F2(
 			_List_Nil,
 			_List_fromArray(
 				[
+					$elm$html$Html$text(
+					'#' + $elm$core$String$fromInt(idx)),
 					A2(
 					$author$project$Main$selectOctave,
 					$author$project$Main$SelectedOctave(idx),
@@ -6492,6 +6589,17 @@ var $author$project$Main$viewEntry = F2(
 					$author$project$Main$selectPitch,
 					$author$project$Main$SelectedPitch(idx),
 					pitch),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onClick(
+							$author$project$Main$TriggerRandomNote(idx))
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('RND!')
+						])),
 					A2(
 					$elm$html$Html$input,
 					_List_fromArray(
