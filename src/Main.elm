@@ -1,11 +1,15 @@
-module Main exposing (..)
+port module Main exposing (..)
 
--- Press buttons to increment and decrement a counter.
---
--- Read how it works:
---   https://guide.elm-lang.org/architecture/buttons.html
---
+-- TODO
 
+{-
+
+1. select pitches in dropdowns
+2. render some graphics
+3. open and close dialogs
+
+
+-}
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, button, div, input, text)
@@ -13,6 +17,130 @@ import Html.Attributes as Attr
 import Html.Events as Events exposing (onClick)
 import Random
 import Time exposing (Posix)
+
+
+port playNote : Int -> Cmd msg
+
+
+port start : ({} -> msg) -> Sub msg
+
+
+type PitchClass
+    = C
+    | CSharp
+    | D
+    | DSharp
+    | E
+    | F
+    | FSharp
+    | G
+    | GSharp
+    | A
+    | ASharp
+    | B
+
+
+allPitchClasses =
+    [ C
+    , CSharp
+    , D
+    , DSharp
+    , E
+    , F
+    , FSharp
+    , G
+    , GSharp
+    , A
+    , ASharp
+    , B
+    ]
+
+
+type alias Octave =
+    Int
+
+
+type Note
+    = Note Octave PitchClass
+
+
+pAsString : PitchClass -> String
+pAsString p =
+    case p of
+        C ->
+            "C"
+
+        CSharp ->
+            "C#"
+
+        D ->
+            "D"
+
+        DSharp ->
+            "D#"
+
+        E ->
+            "E"
+
+        F ->
+            "F"
+
+        FSharp ->
+            "F#"
+
+        G ->
+            "G"
+
+        GSharp ->
+            "G#"
+
+        A ->
+            "A"
+
+        ASharp ->
+            "A#"
+
+        B ->
+            "B"
+
+
+asString : Note -> String
+asString (Note oct pitch) =
+    pAsString pitch ++ String.fromInt oct
+
+
+selectPitch : (String -> msg) -> PitchClass -> Html msg
+selectPitch onSelect currentPitch =
+    let
+        options =
+            allPitchClasses
+                |> List.map
+                    (\p ->
+                        let
+                            ps =
+                                pAsString p
+                        in
+                        Html.option [ Attr.value ps, Attr.selected (ps == pAsString currentPitch) ] [ Html.text ps ]
+                    )
+    in
+    Html.select [ Events.onInput onSelect ] options
+
+
+selectOctave : Octave -> Html Msg
+selectOctave currentOct =
+    let
+        options =
+            [ 0, 1, 2, 3, 4, 5, 6 ]
+                |> List.map
+                    (\o ->
+                        let
+                            os =
+                                String.fromInt o
+                        in
+                        Html.option [ Attr.value os ] [ Html.text os ]
+                    )
+    in
+    Html.select [] options
 
 
 
@@ -26,9 +154,13 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every 1000.0 Tick
+    Sub.batch
+        [ Time.every 250.0 Tick
+        , start Start
+        ]
 
 
+graphSize : Int
 graphSize =
     16
 
@@ -85,6 +217,7 @@ type Msg
     = ChangedInput Int String
     | Tick Posix
     | GeneratedNext Int
+    | Start {}
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -95,7 +228,7 @@ generateNext possible =
     in
     case n of
         0 ->
-            Random.constant (-1)
+            Random.constant -1
 
         nonZero ->
             Random.int 0 (nonZero - 1) |> Random.map (\idx -> Array.get idx possible |> Maybe.withDefault -1)
@@ -131,7 +264,7 @@ update msg model =
             in
             ( newModel, Cmd.none )
 
-        Tick t ->
+        Tick _ ->
             let
                 mOptions =
                     Array.get model.current model.graph
@@ -141,20 +274,25 @@ update msg model =
                     ( { model | current = 0 }, Cmd.none )
 
                 Just (GraphEntry g) ->
+                    let
+                        cmds =
+                            Cmd.batch
+                                [ Random.generate GeneratedNext (generateNext g.array)
+                                ]
+                    in
                     ( model
-                    , Random.generate GeneratedNext (generateNext g.array)
+                    , cmds
                     )
 
         GeneratedNext x ->
-            ( { model | current = x }, Cmd.none )
+            ( { model | current = x }, playNote model.current )
+
+        Start {} ->
+            ( model, Cmd.none )
 
 
 viewEntry : Int -> GraphEntry -> Html Msg
 viewEntry idx (GraphEntry g) =
-    let
-        value =
-            Array.foldr (\x acc -> String.fromInt x ++ " " ++ acc) "" g.array
-    in
     Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
 
 
