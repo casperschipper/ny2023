@@ -19,7 +19,7 @@ import Random
 import Time exposing (Posix)
 
 
-port playNote : Int -> Cmd msg
+port playNote : String -> Cmd msg
 
 
 port start : ({} -> msg) -> Sub msg
@@ -300,7 +300,7 @@ update msg model =
             handleTick model
 
         GeneratedNext x ->
-            ( { model | current = x }, playNote model.current )
+            ( { model | current = x }, playNote (lookupSelectedNote model.current model.graph) )
 
         Start {} ->
             ( model, Cmd.none )
@@ -311,6 +311,12 @@ update msg model =
         SelectedPitch idx pitchStr ->
             ( selectedPitch idx pitchStr model, Cmd.none )
 
+
+lookupSelectedNote idx array =
+    Array.get idx array 
+    |> Maybe.map (\(GraphEntry g) -> g.note)
+    |> Maybe.withDefault (Note 3 C) 
+    |> asString
 
 selectedOctave idx octStr model =
     let
@@ -403,7 +409,7 @@ handleChangedInput idx str model =
 viewEntry : Int -> GraphEntry -> Html Msg
 viewEntry idx (GraphEntry g) =
     let
-        (  octave, pitch ) =
+        ( octave, pitch ) =
             case g.note of
                 Note o p ->
                     ( o, p )

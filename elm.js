@@ -6067,8 +6067,57 @@ var $author$project$Main$handleTick = function (model) {
 		return _Utils_Tuple2(model, cmds);
 	}
 };
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$int);
+var $author$project$Main$pAsString = function (p) {
+	switch (p.$) {
+		case 'C':
+			return 'C';
+		case 'CSharp':
+			return 'C#';
+		case 'D':
+			return 'D';
+		case 'DSharp':
+			return 'D#';
+		case 'E':
+			return 'E';
+		case 'F':
+			return 'F';
+		case 'FSharp':
+			return 'F#';
+		case 'G':
+			return 'G';
+		case 'GSharp':
+			return 'G#';
+		case 'A':
+			return 'A';
+		case 'ASharp':
+			return 'A#';
+		default:
+			return 'B';
+	}
+};
+var $author$project$Main$asString = function (_v0) {
+	var oct = _v0.a;
+	var pitch = _v0.b;
+	return _Utils_ap(
+		$author$project$Main$pAsString(pitch),
+		$elm$core$String$fromInt(oct));
+};
+var $author$project$Main$lookupSelectedNote = F2(
+	function (idx, array) {
+		return $author$project$Main$asString(
+			A2(
+				$elm$core$Maybe$withDefault,
+				A2($author$project$Main$Note, 3, $author$project$Main$C),
+				A2(
+					$elm$core$Maybe$map,
+					function (_v0) {
+						var g = _v0.a;
+						return g.note;
+					},
+					A2($elm$core$Array$get, idx, array))));
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
 var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$withOctave = F2(
 	function (o, _v0) {
@@ -6191,7 +6240,8 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{current: x}),
-					$author$project$Main$playNote(model.current));
+					$author$project$Main$playNote(
+						A2($author$project$Main$lookupSelectedNote, model.current, model.graph)));
 			case 'Start':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'SelectedOctave':
@@ -6349,7 +6399,6 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -6389,34 +6438,6 @@ var $author$project$Main$selectOctave = F2(
 	});
 var $author$project$Main$allPitchClasses = _List_fromArray(
 	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
-var $author$project$Main$pAsString = function (p) {
-	switch (p.$) {
-		case 'C':
-			return 'C';
-		case 'CSharp':
-			return 'C#';
-		case 'D':
-			return 'D';
-		case 'DSharp':
-			return 'D#';
-		case 'E':
-			return 'E';
-		case 'F':
-			return 'F';
-		case 'FSharp':
-			return 'F#';
-		case 'G':
-			return 'G';
-		case 'GSharp':
-			return 'G#';
-		case 'A':
-			return 'A';
-		case 'ASharp':
-			return 'A#';
-		default:
-			return 'B';
-	}
-};
 var $author$project$Main$selectPitch = F2(
 	function (onSelect, currentPitch) {
 		var options = A2(

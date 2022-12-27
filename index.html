@@ -25,9 +25,8 @@
 		const synth = new Tone.Synth().toDestination();
 
 		app.ports.playNote.subscribe(function (note) {
-			console.log("tone");
 			var now = Tone.now();
-			synth.triggerAttackRelease("C3", "8n", now);
+			synth.triggerAttackRelease(note, "16n", now);
 		});
 	}
 
