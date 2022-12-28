@@ -5746,6 +5746,8 @@ var $author$project$Main$SetNote = F2(
 	function (a, b) {
 		return {$: 'SetNote', a: a, b: b};
 	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Main$copyJSON = _Platform_outgoingPort('copyJSON', $elm$json$Json$Encode$string);
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -6120,7 +6122,99 @@ var $author$project$Main$lookupSelectedNote = F2(
 					},
 					A2($elm$core$Array$get, idx, array))));
 	});
-var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
+var $elm$core$Array$foldl = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldl,
+			func,
+			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
+			tail);
+	});
+var $elm$json$Json$Encode$array = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$Array$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$encodeNote = function (_v0) {
+	var o = _v0.a;
+	var p = _v0.b;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'pitch',
+				$elm$json$Json$Encode$string(
+					$author$project$Main$pAsString(p))),
+				_Utils_Tuple2(
+				'octave',
+				$elm$json$Json$Encode$int(o))
+			]));
+};
+var $author$project$Main$encodeGraphEntry = function (_v0) {
+	var g = _v0.a;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'array',
+				A2($elm$json$Json$Encode$array, $elm$json$Json$Encode$int, g.array)),
+				_Utils_Tuple2(
+				'value',
+				$elm$json$Json$Encode$string(g.value)),
+				_Utils_Tuple2(
+				'note',
+				$author$project$Main$encodeNote(g.note))
+			]));
+};
+var $author$project$Main$encodeModel = function (model) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'current',
+				$elm$json$Json$Encode$int(model.current)),
+				_Utils_Tuple2(
+				'graph',
+				A2($elm$json$Json$Encode$array, $author$project$Main$encodeGraphEntry, model.graph))
+			]));
+};
+var $author$project$Main$modelAsJSON = function (model) {
+	return A2(
+		$elm$json$Json$Encode$encode,
+		4,
+		$author$project$Main$encodeModel(model));
+};
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
 var $author$project$Main$A = {$: 'A'};
 var $author$project$Main$ASharp = {$: 'ASharp'};
@@ -6325,7 +6419,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					A3($author$project$Main$setNote, idx, note, model),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'TriggerRandomNote':
 				var idx = msg.a;
 				return _Utils_Tuple2(
 					model,
@@ -6333,96 +6427,16 @@ var $author$project$Main$update = F2(
 						$elm$random$Random$generate,
 						$author$project$Main$SetNote(idx),
 						$author$project$Main$randomNote));
+			default:
+				return _Utils_Tuple2(
+					model,
+					$author$project$Main$copyJSON(
+						$author$project$Main$modelAsJSON(model)));
 		}
 	});
+var $author$project$Main$CopyJSON = {$: 'CopyJSON'};
 var $elm$html$Html$br = _VirtualDom_node('br');
-var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
-var $elm$core$Array$foldl = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldl,
-			func,
-			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
-			tail);
-	});
-var $elm$json$Json$Encode$array = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$Array$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $author$project$Main$encodeNote = function (_v0) {
-	var o = _v0.a;
-	var p = _v0.b;
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'pitch',
-				$elm$json$Json$Encode$string(
-					$author$project$Main$pAsString(p))),
-				_Utils_Tuple2(
-				'octave',
-				$elm$json$Json$Encode$int(o))
-			]));
-};
-var $author$project$Main$encodeGraphEntry = function (_v0) {
-	var g = _v0.a;
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'array',
-				A2($elm$json$Json$Encode$array, $elm$json$Json$Encode$int, g.array)),
-				_Utils_Tuple2(
-				'value',
-				$elm$json$Json$Encode$string(g.value)),
-				_Utils_Tuple2(
-				'note',
-				$author$project$Main$encodeNote(g.note))
-			]));
-};
-var $author$project$Main$encodeModel = function (model) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'current',
-				$elm$json$Json$Encode$int(model.current)),
-				_Utils_Tuple2(
-				'graph',
-				A2($elm$json$Json$Encode$array, $author$project$Main$encodeGraphEntry, model.graph))
-			]));
-};
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $author$project$Main$entryAsString = function (_v0) {
 	var g = _v0.a;
 	return g.value + ('\narray: ' + A3(
@@ -6499,9 +6513,24 @@ var $elm$core$Array$map = F2(
 			A2($elm$core$Elm$JsArray$map, helper, tree),
 			A2($elm$core$Elm$JsArray$map, func, tail));
 	});
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
 var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$ul = _VirtualDom_node('ul');
@@ -6520,26 +6549,8 @@ var $author$project$Main$SelectedPitch = F2(
 var $author$project$Main$TriggerRandomNote = function (a) {
 	return {$: 'TriggerRandomNote', a: a};
 };
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -6700,10 +6711,6 @@ var $author$project$Main$viewEntry = F2(
 				]));
 	});
 var $author$project$Main$view = function (model) {
-	var str = A2(
-		$elm$json$Json$Encode$encode,
-		0,
-		$author$project$Main$encodeModel(model));
 	var entries = $elm$core$Array$toList(
 		A2(
 			$elm$core$Array$map,
@@ -6737,14 +6744,14 @@ var $author$project$Main$view = function (model) {
 					])),
 				A2($elm$html$Html$ul, _List_Nil, entries),
 				A2(
-				$elm$html$Html$pre,
+				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'font-size', '5px')
+						$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(str)
+						$elm$html$Html$text('copy state to clipboard')
 					]))
 			]),
 		title: 'graph tones'

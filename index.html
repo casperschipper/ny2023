@@ -21,7 +21,9 @@
 		var app = Elm.Main.init({
 			node: document.getElementById('myapp')
 		});
-		console.log("hit start");
+		app.ports.copyJSON.subscribe(function (jsonStr) {
+			navigator.clipboard.writeText(jsonStr);
+		});
 		const synth = new Tone.Synth().toDestination();
 
 		app.ports.playNote.subscribe(function (note) {

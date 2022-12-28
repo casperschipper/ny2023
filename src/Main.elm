@@ -3,13 +3,13 @@ port module Main exposing (..)
 -- TODO
 {-
 
-   - Canon!
-   - save state
-   - render some graphics
-   - open and close dialogs
+      - Canon!
+      - save state
+      - render some graphics
+      - open and close dialogs
 
--- BONUS:
-Generate opposites of complete functions
+   -- BONUS:
+   Generate opposites of complete functions
 
 -}
 
@@ -28,6 +28,9 @@ port playNote : String -> Cmd msg
 
 
 port start : ({} -> msg) -> Sub msg
+
+
+port copyJSON : String -> Cmd msg
 
 
 type PitchClass
@@ -356,6 +359,7 @@ type Msg
     | SelectedPitch Int String
     | TriggerRandomNote Int
     | SetNote Int Note
+    | CopyJSON
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -386,6 +390,11 @@ setNote idx note model =
             model
 
 
+modelAsJSON : Model -> String
+modelAsJSON model =
+    JE.encode 4 (encodeModel model)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -412,6 +421,9 @@ update msg model =
 
         TriggerRandomNote idx ->
             ( model, Random.generate (SetNote idx) randomNote )
+
+        CopyJSON ->
+            ( model, copyJSON (modelAsJSON model) )
 
 
 lookupSelectedNote idx array =
@@ -538,9 +550,6 @@ view model =
 
         currentEntry =
             Array.get model.current model.graph |> Maybe.map entryAsString |> Maybe.withDefault "No value"
-    
-        str =
-            JE.encode 0 (encodeModel  model)
     in
     { title = "graph tones"
     , body =
@@ -548,6 +557,6 @@ view model =
         , Html.br [] []
         , Html.pre [] [ Html.text currentEntry ]
         , Html.ul [] <| entries
-        , Html.pre [Attr.style "font-size" "5px" ] [ Html.text str ]
+        , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
         ]
     }
