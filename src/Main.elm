@@ -8,6 +8,8 @@ port module Main exposing (..)
    - render some graphics
    - open and close dialogs
 
+-- BONUS:
+Generate opposites of complete functions
 
 -}
 
@@ -16,6 +18,8 @@ import Browser
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes as Attr
 import Html.Events as Events exposing (onClick)
+import Json.Decode as JD exposing (Decoder)
+import Json.Encode as JE exposing (Value)
 import Random
 import Time exposing (Posix)
 
@@ -63,6 +67,32 @@ type alias Octave =
 
 type Note
     = Note Octave PitchClass
+
+
+encodeNote : Note -> Value
+encodeNote (Note o p) =
+    JE.object
+        [ ( "pitch", JE.string (pAsString p) )
+        , ( "octave", JE.int o )
+        ]
+
+
+decodeNote : Decoder Note
+decodeNote =
+    JD.map2 Note
+        (JD.field "octave" JD.int)
+        (JD.field "pitch" decodePitchClass)
+
+
+decodePitchClass : Decoder PitchClass
+decodePitchClass =
+    JD.string
+        |> JD.map
+            (\str ->
+                str
+                    |> stringToPitchclass
+                    |> Maybe.withDefault C
+            )
 
 
 withOctave : Octave -> Note -> Note
@@ -170,7 +200,7 @@ randomNote =
                     )
 
         oct =
-            Random.int 1 5
+            Random.int 1 4
     in
     Random.map2 Note oct randClass
 
@@ -248,6 +278,30 @@ type GraphEntry
         }
 
 
+decodeGraphEntry : Decoder GraphEntry
+decodeGraphEntry =
+    JD.map3
+        (\arr v n ->
+            GraphEntry
+                { array = arr
+                , value = v
+                , note = n
+                }
+        )
+        (JD.field "array" (JD.array JD.int))
+        (JD.field "value" JD.string)
+        (JD.field "note" decodeNote)
+
+
+encodeGraphEntry : GraphEntry -> JE.Value
+encodeGraphEntry (GraphEntry g) =
+    JE.object
+        [ ( "array", JE.array JE.int g.array )
+        , ( "value", JE.string g.value )
+        , ( "note", encodeNote g.note )
+        ]
+
+
 entryAsString : GraphEntry -> String
 entryAsString (GraphEntry g) =
     g.value ++ "\narray: " ++ Array.foldr (\x acc -> String.fromInt x ++ acc) "" g.array
@@ -257,6 +311,14 @@ type alias Model =
     { current : Int
     , graph : Array GraphEntry
     }
+
+
+encodeModel : Model -> JE.Value
+encodeModel model =
+    JE.object
+        [ ( "current", JE.int model.current )
+        , ( "graph", JE.array encodeGraphEntry model.graph )
+        ]
 
 
 initGraph : Array GraphEntry
@@ -349,7 +411,7 @@ update msg model =
             ( setNote idx note model, Cmd.none )
 
         TriggerRandomNote idx ->
-            (model, Random.generate (SetNote idx) randomNote )
+            ( model, Random.generate (SetNote idx) randomNote )
 
 
 lookupSelectedNote idx array =
@@ -459,7 +521,7 @@ viewEntry idx (GraphEntry g) =
         [ Html.text ("#" ++ String.fromInt idx)
         , selectOctave (SelectedOctave idx) octave
         , selectPitch (SelectedPitch idx) pitch
-        , Html.button [ Events.onClick (TriggerRandomNote idx) ] [Html.text "RND!" ]
+        , Html.button [ Events.onClick (TriggerRandomNote idx) ] [ Html.text "RND!" ]
         , Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
         ]
 
@@ -476,6 +538,9 @@ view model =
 
         currentEntry =
             Array.get model.current model.graph |> Maybe.map entryAsString |> Maybe.withDefault "No value"
+    
+        str =
+            JE.encode 0 (encodeModel  model)
     in
     { title = "graph tones"
     , body =
@@ -483,5 +548,6 @@ view model =
         , Html.br [] []
         , Html.pre [] [ Html.text currentEntry ]
         , Html.ul [] <| entries
+        , Html.pre [Attr.style "font-size" "5px" ] [ Html.text str ]
         ]
     }
