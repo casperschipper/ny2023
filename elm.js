@@ -5305,11 +5305,8 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{current: 0, graph: $author$project$Main$initGraph},
+		{current: 0, graph: $author$project$Main$initGraph, history: _List_Nil},
 		$elm$core$Platform$Cmd$none);
-};
-var $author$project$Main$Start = function (a) {
-	return {$: 'Start', a: a};
 };
 var $author$project$Main$Tick = function (a) {
 	return {$: 'Tick', a: a};
@@ -5730,16 +5727,11 @@ var $elm$time$Time$every = F2(
 		return $elm$time$Time$subscription(
 			A2($elm$time$Time$Every, interval, tagger));
 	});
-var $author$project$Main$start = _Platform_incomingPort(
-	'start',
-	$elm$json$Json$Decode$succeed(
-		{}));
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				A2($elm$time$Time$every, 125.0, $author$project$Main$Tick),
-				$author$project$Main$start($author$project$Main$Start)
+				A2($elm$time$Time$every, 125.0, $author$project$Main$Tick)
 			]));
 };
 var $author$project$Main$SetNote = F2(
@@ -6396,11 +6388,12 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{current: x}),
+						{
+							current: x,
+							history: A2($elm$core$List$cons, x, model.history)
+						}),
 					$author$project$Main$playNote(
 						A2($author$project$Main$lookupSelectedNote, model.current, model.graph)));
-			case 'Start':
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'SelectedOctave':
 				var idx = msg.a;
 				var octStr = msg.b;
@@ -6435,8 +6428,87 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $author$project$Main$CopyJSON = {$: 'CopyJSON'};
+var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $author$project$Background$safeModBy = F2(
+	function (y, x) {
+		if (!y) {
+			return 1;
+		} else {
+			var nonzero = y;
+			return A2($elm$core$Basics$modBy, y, x);
+		}
+	});
+var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
+var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
+var $author$project$Background$coordinatesFromIdx = F3(
+	function (screenWidth, squareWidth, i) {
+		var maxw = (screenWidth / squareWidth) | 0;
+		var _v0 = A2(
+			$elm$core$Debug$log,
+			'I',
+			$elm$core$String$fromInt(i));
+		return _List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$x(
+				$elm$core$String$fromInt(
+					A2($author$project$Background$safeModBy, screenWidth, i * squareWidth))),
+				$elm$svg$Svg$Attributes$y(
+				$elm$core$String$fromInt(((i / maxw) | 0) * squareWidth)),
+				$elm$svg$Svg$Attributes$width(
+				$elm$core$String$fromInt((squareWidth / 2) | 0)),
+				$elm$svg$Svg$Attributes$height(
+				$elm$core$String$fromInt((squareWidth / 2) | 0))
+			]);
+	});
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
+var $author$project$Background$mkRect = F3(
+	function (screenWidth, squareWidth, x) {
+		return A2(
+			$elm$svg$Svg$rect,
+			_Utils_ap(
+				A3($author$project$Background$coordinatesFromIdx, screenWidth, squareWidth, x),
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$fill('rgb(100,0,0)')
+					])),
+			_List_Nil);
+	});
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var $author$project$Background$backgroundSvg = F3(
+	function (history, w, h) {
+		var ws = $elm$core$String$fromInt(w);
+		var hs = $elm$core$String$fromInt(h);
+		return A2(
+			$elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$width(ws),
+					$elm$svg$Svg$Attributes$height(hs),
+					$elm$svg$Svg$Attributes$viewBox(
+					A2(
+						$elm$core$String$join,
+						' ',
+						A2(
+							$elm$core$List$map,
+							$elm$core$String$fromInt,
+							_List_fromArray(
+								[0, 0, w, h]))))
+				]),
+			A2(
+				$elm$core$List$indexedMap,
+				F2(
+					function (i, _v0) {
+						return A3($author$project$Background$mkRect, w, 25, i);
+					}),
+				history));
+	});
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$entryAsString = function (_v0) {
 	var g = _v0.a;
 	return g.value + ('\narray: ' + A3(
@@ -6531,6 +6603,8 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$pre = _VirtualDom_node('pre');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$ul = _VirtualDom_node('ul');
@@ -6549,7 +6623,6 @@ var $author$project$Main$SelectedPitch = F2(
 var $author$project$Main$TriggerRandomNote = function (a) {
 	return {$: 'TriggerRandomNote', a: a};
 };
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -6623,7 +6696,7 @@ var $author$project$Main$selectOctave = F2(
 						]));
 			},
 			_List_fromArray(
-				[0, 1, 2, 3, 4, 5, 6]));
+				[1, 2, 3, 4, 5]));
 		return A2(
 			$elm$html$Html$select,
 			_List_fromArray(
@@ -6732,6 +6805,19 @@ var $author$project$Main$view = function (model) {
 	return {
 		body: _List_fromArray(
 			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'position', 'fixed'),
+						A2($elm$html$Html$Attributes$style, 'top', '0px'),
+						A2($elm$html$Html$Attributes$style, 'left', '0px'),
+						A2($elm$html$Html$Attributes$style, 'z-index', '-1')
+					]),
+				_List_fromArray(
+					[
+						A3($author$project$Background$backgroundSvg, model.history, 1000, 800)
+					])),
 				$elm$html$Html$text(
 				$elm$core$String$fromInt(model.current)),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
@@ -6752,7 +6838,12 @@ var $author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('copy state to clipboard')
-					]))
+					])),
+				$elm$html$Html$text(
+				A2(
+					$elm$core$String$join,
+					' ',
+					A2($elm$core$List$map, $elm$core$String$fromInt, model.history)))
 			]),
 		title: 'graph tones'
 	};

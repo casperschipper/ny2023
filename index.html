@@ -24,12 +24,11 @@
 		app.ports.copyJSON.subscribe(function (jsonStr) {
 			navigator.clipboard.writeText(jsonStr);
 		});
-		const synth = new Tone.Synth().toDestination();
+		const synth = new Tone.PolySynth().toDestination();
 
 		app.ports.playNote.subscribe(function (note) {
 			var now = Tone.now();
-			synth.triggerAttack(note, now);
-			synth.triggerRelease(now+0.15);
+			synth.triggerAttackRelease(note, "16n",now);
 		});
 	}
 

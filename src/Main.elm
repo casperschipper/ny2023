@@ -14,6 +14,7 @@ port module Main exposing (..)
 -}
 
 import Array exposing (Array)
+import Background
 import Browser
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes as Attr
@@ -25,9 +26,6 @@ import Time exposing (Posix)
 
 
 port playNote : String -> Cmd msg
-
-
-port start : ({} -> msg) -> Sub msg
 
 
 port copyJSON : String -> Cmd msg
@@ -48,6 +46,7 @@ type PitchClass
     | B
 
 
+allPitchClasses : List PitchClass
 allPitchClasses =
     [ C
     , CSharp
@@ -62,6 +61,46 @@ allPitchClasses =
     , ASharp
     , B
     ]
+
+
+toInt : PitchClass -> Int
+toInt p =
+    case p of
+        C ->
+            0
+
+        CSharp ->
+            1
+
+        D ->
+            2
+
+        DSharp ->
+            3
+
+        E ->
+            4
+
+        F ->
+            5
+
+        FSharp ->
+            6
+
+        G ->
+            7
+
+        GSharp ->
+            8
+
+        A ->
+            9
+
+        ASharp ->
+            10
+
+        B ->
+            11
 
 
 type alias Octave =
@@ -234,7 +273,7 @@ selectOctave : (String -> msg) -> Octave -> Html msg
 selectOctave toMsg currentOct =
     let
         options =
-            [ 0, 1, 2, 3, 4, 5, 6 ]
+            [ 1, 2, 3, 4, 5 ]
                 |> List.map
                     (\o ->
                         let
@@ -260,7 +299,6 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Time.every 125.0 Tick
-        , start Start
         ]
 
 
@@ -312,6 +350,7 @@ entryAsString (GraphEntry g) =
 
 type alias Model =
     { current : Int
+    , history : List Int
     , graph : Array GraphEntry
     }
 
@@ -341,6 +380,7 @@ init : flags -> ( Model, Cmd Msg )
 init _ =
     ( { current = 0
       , graph = initGraph
+      , history = []
       }
     , Cmd.none
     )
@@ -354,7 +394,6 @@ type Msg
     = ChangedInput Int String
     | Tick Posix
     | GeneratedNext Int
-    | Start {}
     | SelectedOctave Int String
     | SelectedPitch Int String
     | TriggerRandomNote Int
@@ -405,10 +444,12 @@ update msg model =
             handleTick model
 
         GeneratedNext x ->
-            ( { model | current = x }, playNote (lookupSelectedNote model.current model.graph) )
-
-        Start {} ->
-            ( model, Cmd.none )
+            ( { model
+                | current = x
+                , history = x :: model.history
+              }
+            , playNote (lookupSelectedNote model.current model.graph)
+            )
 
         SelectedOctave idx octStr ->
             ( selectedOctave idx octStr model, Cmd.none )
@@ -426,6 +467,7 @@ update msg model =
             ( model, copyJSON (modelAsJSON model) )
 
 
+lookupSelectedNote : Int -> Array GraphEntry -> String
 lookupSelectedNote idx array =
     Array.get idx array
         |> Maybe.map (\(GraphEntry g) -> g.note)
@@ -433,6 +475,7 @@ lookupSelectedNote idx array =
         |> asString
 
 
+selectedOctave : Int -> String -> Model -> Model
 selectedOctave idx octStr model =
     let
         mentry =
@@ -453,6 +496,7 @@ selectedOctave idx octStr model =
             model
 
 
+selectedPitch : Int -> String -> Model -> Model
 selectedPitch idx pitchStr model =
     let
         mentry =
@@ -553,10 +597,18 @@ view model =
     in
     { title = "graph tones"
     , body =
-        [ Html.text (String.fromInt model.current)
+        [ Html.div
+            [ Attr.style "position" "fixed"
+            , Attr.style "top" "0px"
+            , Attr.style "left" "0px"
+            , Attr.style "z-index" "-1"
+            ]
+            [ Background.backgroundSvg model.history 1000 800 ]
+        , Html.text (String.fromInt model.current)
         , Html.br [] []
         , Html.pre [] [ Html.text currentEntry ]
         , Html.ul [] <| entries
         , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
+        , Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
     }
