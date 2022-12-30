@@ -5731,7 +5731,7 @@ var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				A2($elm$time$Time$every, 125.0, $author$project$Main$Tick)
+				A2($elm$time$Time$every, 75.0, $author$project$Main$Tick)
 			]));
 };
 var $author$project$Main$SetNote = F2(
@@ -6238,6 +6238,8 @@ var $elm$random$Random$map2 = F3(
 					seed2);
 			});
 	});
+var $author$project$Main$pentaTonic = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
 var $author$project$Main$randomNote = function () {
 	var randClass = A2(
 		$elm$random$Random$map,
@@ -6248,7 +6250,7 @@ var $author$project$Main$randomNote = function () {
 				A2(
 					$elm$core$Array$get,
 					idx,
-					$elm$core$Array$fromList($author$project$Main$allPitchClasses)));
+					$elm$core$Array$fromList($author$project$Main$pentaTonic)));
 		},
 		A2(
 			$elm$random$Random$int,
@@ -6257,6 +6259,162 @@ var $author$project$Main$randomNote = function () {
 	var oct = A2($elm$random$Random$int, 1, 4);
 	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
 }();
+var $author$project$Main$randomizeAllNotes = function (model) {
+	return $elm$core$Platform$Cmd$batch(
+		A2(
+			$elm$core$List$map,
+			function (idx) {
+				return A2(
+					$elm$random$Random$generate,
+					$author$project$Main$SetNote(idx),
+					$author$project$Main$randomNote);
+			},
+			A2(
+				$elm$core$List$range,
+				0,
+				$elm$core$Array$length(model.graph))));
+};
+var $author$project$Main$SetOptions = F2(
+	function (a, b) {
+		return {$: 'SetOptions', a: a, b: b};
+	});
+var $elm$random$Random$andThen = F2(
+	function (callback, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				var _v1 = genA(seed);
+				var result = _v1.a;
+				var newSeed = _v1.b;
+				var _v2 = callback(result);
+				var genB = _v2.a;
+				return genB(newSeed);
+			});
+	});
+var $elm$random$Random$listHelp = F4(
+	function (revList, n, gen, seed) {
+		listHelp:
+		while (true) {
+			if (n < 1) {
+				return _Utils_Tuple2(revList, seed);
+			} else {
+				var _v0 = gen(seed);
+				var value = _v0.a;
+				var newSeed = _v0.b;
+				var $temp$revList = A2($elm$core$List$cons, value, revList),
+					$temp$n = n - 1,
+					$temp$gen = gen,
+					$temp$seed = newSeed;
+				revList = $temp$revList;
+				n = $temp$n;
+				gen = $temp$gen;
+				seed = $temp$seed;
+				continue listHelp;
+			}
+		}
+	});
+var $elm$random$Random$list = F2(
+	function (n, _v0) {
+		var gen = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
+			});
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$get = F2(
+	function (nth, list) {
+		return $elm$core$List$head(
+			A2($elm$core$List$drop, nth - 1, list));
+	});
+var $author$project$Main$randomChoice = F2(
+	function (first, rest) {
+		return A2(
+			$elm$random$Random$map,
+			function (idx) {
+				if (!idx) {
+					return first;
+				} else {
+					var n = idx;
+					return A2(
+						$elm$core$Maybe$withDefault,
+						first,
+						A2(
+							$author$project$Main$get,
+							n,
+							A2($elm$core$List$cons, first, rest)));
+				}
+			},
+			A2(
+				$elm$random$Random$int,
+				0,
+				$elm$core$List$length(rest)));
+	});
+var $author$project$Main$randomizeOpts = function (model) {
+	var maxIndex = $elm$core$Array$length(model.graph);
+	var fromChoice = F2(
+		function (idx, choice) {
+			return A2(
+				$elm$random$Random$map,
+				function (rlst) {
+					return $elm$core$Array$fromList(
+						A2(
+							$elm$core$List$cons,
+							A2($elm$core$Basics$modBy, maxIndex, idx + 1),
+							rlst));
+				},
+				A2(
+					$elm$random$Random$list,
+					choice,
+					A2($elm$random$Random$int, 0, maxIndex)));
+		});
+	return $elm$core$Platform$Cmd$batch(
+		A2(
+			$elm$core$List$map,
+			function (idx) {
+				return A2(
+					$elm$random$Random$generate,
+					$author$project$Main$SetOptions(idx),
+					A2(
+						$elm$random$Random$andThen,
+						fromChoice(idx),
+						A2(
+							$author$project$Main$randomChoice,
+							0,
+							_List_fromArray(
+								[0, 0, 1, 1, 2, 3]))));
+			},
+			A2($elm$core$List$range, 0, maxIndex)));
+};
 var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$withOctave = F2(
 	function (o, _v0) {
@@ -6372,6 +6530,38 @@ var $author$project$Main$setNote = F3(
 			return model;
 		}
 	});
+var $author$project$Main$intArrayToString = function (arr) {
+	return A2(
+		$elm$core$String$join,
+		' ',
+		A2(
+			$elm$core$List$map,
+			$elm$core$String$fromInt,
+			$elm$core$Array$toList(arr)));
+};
+var $author$project$Main$setOptions = F3(
+	function (idx, opts, model) {
+		var mEntry = A2($elm$core$Array$get, idx, model.graph);
+		if (mEntry.$ === 'Just') {
+			var g = mEntry.a.a;
+			var newGraph = A3(
+				$elm$core$Array$set,
+				idx,
+				$author$project$Main$GraphEntry(
+					_Utils_update(
+						g,
+						{
+							array: opts,
+							value: $author$project$Main$intArrayToString(opts)
+						})),
+				model.graph);
+			return _Utils_update(
+				model,
+				{graph: newGraph});
+		} else {
+			return model;
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6380,6 +6570,12 @@ var $author$project$Main$update = F2(
 				var str = msg.b;
 				return _Utils_Tuple2(
 					A3($author$project$Main$handleChangedInput, idx, str, model),
+					$elm$core$Platform$Cmd$none);
+			case 'SetOptions':
+				var idx = msg.a;
+				var opts = msg.b;
+				return _Utils_Tuple2(
+					A3($author$project$Main$setOptions, idx, opts, model),
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
 				return $author$project$Main$handleTick(model);
@@ -6420,14 +6616,60 @@ var $author$project$Main$update = F2(
 						$elm$random$Random$generate,
 						$author$project$Main$SetNote(idx),
 						$author$project$Main$randomNote));
-			default:
+			case 'CopyJSON':
 				return _Utils_Tuple2(
 					model,
 					$author$project$Main$copyJSON(
 						$author$project$Main$modelAsJSON(model)));
+			case 'RandomizeAll':
+				return _Utils_Tuple2(
+					model,
+					$author$project$Main$randomizeAllNotes(model));
+			default:
+				return _Utils_Tuple2(
+					model,
+					$author$project$Main$randomizeOpts(model));
 		}
 	});
 var $author$project$Main$CopyJSON = {$: 'CopyJSON'};
+var $author$project$Main$RandomizeAll = {$: 'RandomizeAll'};
+var $author$project$Main$RandomizeOpts = {$: 'RandomizeOpts'};
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
+var $author$project$Background$clip = F3(
+	function (low, high, x) {
+		return function (y) {
+			return A2($elm$core$Basics$min, high, y);
+		}(
+			A2($elm$core$Basics$max, low, x));
+	});
+var $elm$core$Basics$pi = _Basics_pi;
+var $elm$core$Basics$sin = _Basics_sin;
+var $author$project$Background$colorOfInt = F2(
+	function (noOfColors, n) {
+		var norm = function (x) {
+			return $elm$core$String$fromInt(
+				$elm$core$Basics$floor((x + 1) * 128.0));
+		};
+		var r = function (x) {
+			return norm(
+				$elm$core$Basics$sin((x * $elm$core$Basics$pi) * 2));
+		};
+		var g = function (x) {
+			return norm(
+				$elm$core$Basics$sin(((x + 0.3333) * $elm$core$Basics$pi) * 2));
+		};
+		var b = function (x) {
+			return norm(
+				$elm$core$Basics$sin(((x + 0.666667) * $elm$core$Basics$pi) * 2));
+		};
+		return function (x) {
+			return 'rgb(' + (r(x) + (',' + (g(x) + (',' + (b(x) + ')')))));
+		}(
+			A3($author$project$Background$clip, 0.0, 1.0, n / noOfColors));
+	});
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $author$project$Background$safeModBy = F2(
 	function (y, x) {
@@ -6444,10 +6686,6 @@ var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
 var $author$project$Background$coordinatesFromIdx = F3(
 	function (screenWidth, squareWidth, i) {
 		var maxw = (screenWidth / squareWidth) | 0;
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			'I',
-			$elm$core$String$fromInt(i));
 		return _List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x(
@@ -6456,23 +6694,23 @@ var $author$project$Background$coordinatesFromIdx = F3(
 				$elm$svg$Svg$Attributes$y(
 				$elm$core$String$fromInt(((i / maxw) | 0) * squareWidth)),
 				$elm$svg$Svg$Attributes$width(
-				$elm$core$String$fromInt((squareWidth / 2) | 0)),
+				$elm$core$String$fromInt(squareWidth - 1)),
 				$elm$svg$Svg$Attributes$height(
-				$elm$core$String$fromInt((squareWidth / 2) | 0))
+				$elm$core$String$fromInt(squareWidth - 1))
 			]);
 	});
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
-var $author$project$Background$mkRect = F3(
-	function (screenWidth, squareWidth, x) {
+var $author$project$Background$mkRect = F4(
+	function (screenWidth, squareWidth, color, x) {
 		return A2(
 			$elm$svg$Svg$rect,
 			_Utils_ap(
 				A3($author$project$Background$coordinatesFromIdx, screenWidth, squareWidth, x),
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$fill('rgb(100,0,0)')
+						$elm$svg$Svg$Attributes$fill(color)
 					])),
 			_List_Nil);
 	});
@@ -6501,10 +6739,15 @@ var $author$project$Background$backgroundSvg = F3(
 			A2(
 				$elm$core$List$indexedMap,
 				F2(
-					function (i, _v0) {
-						return A3($author$project$Background$mkRect, w, 25, i);
+					function (i, pitchIndex) {
+						return A4(
+							$author$project$Background$mkRect,
+							w,
+							25,
+							A2($author$project$Background$colorOfInt, 16, pitchIndex),
+							i);
 					}),
-				history));
+				$elm$core$List$reverse(history)));
 	});
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
@@ -6839,11 +7082,26 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$text('copy state to clipboard')
 					])),
-				$elm$html$Html$text(
 				A2(
-					$elm$core$String$join,
-					' ',
-					A2($elm$core$List$map, $elm$core$String$fromInt, model.history)))
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('randomize all notes')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('randomize options')
+					]))
 			]),
 		title: 'graph tones'
 	};

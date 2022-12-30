@@ -10,29 +10,30 @@ coordinatesFromIdx screenWidth squareWidth i =
     let
         maxw =
             screenWidth // squareWidth
-
-        _ =
-            Debug.log "I" <| String.fromInt i
     in
     [ x (safeModBy screenWidth (i * squareWidth) |> String.fromInt)
     , y ((i // maxw) * squareWidth |> String.fromInt)
-    , width (squareWidth // 2 |> String.fromInt)
-    , height (squareWidth // 2 |> String.fromInt)
+    , width (squareWidth - 1 |> String.fromInt)
+    , height (squareWidth - 1 |> String.fromInt)
     ]
+
 
 safeModBy : Int -> Int -> Int
 safeModBy y x =
     case y of
-        0 -> 1
+        0 ->
+            1
 
-        nonzero -> modBy y x
+        nonzero ->
+            modBy y x
 
-mkRect screenWidth squareWidth x  =
+
+mkRect screenWidth squareWidth color x =
     rect
         (coordinatesFromIdx screenWidth squareWidth x
-        ++ [
-         fill <| "rgb(100,0,0)"
-        ])
+            ++ [ fill <| color
+               ]
+        )
         []
 
 
@@ -50,6 +51,28 @@ backgroundSvg history w h =
         , height hs
         , viewBox <| ([ 0, 0, w, h ] |> List.map String.fromInt |> String.join " ")
         ]
-        (history 
-        |> List.indexedMap (\i _ -> mkRect w 25 i)
+        (List.reverse history
+            |> List.indexedMap (\i pitchIndex -> mkRect w 25 (colorOfInt 16 pitchIndex) i)
         )
+
+
+clip low high x =
+    Basics.max low x |> (\y -> Basics.min high y)
+
+
+colorOfInt : Int -> Int -> String
+colorOfInt noOfColors n =
+    let
+        norm x =
+            (x + 1) * 128.0 |> floor |> String.fromInt
+
+        r x =
+            sin (x * pi * 2) |> norm
+
+        g x =
+            sin ((x + 0.3333) * pi * 2) |> norm
+
+        b x =
+            sin ((x + 0.666667) * pi * 2) |> norm
+    in
+    toFloat n / toFloat noOfColors |> clip 0.0 1.0 |> (\x -> "rgb(" ++ r x ++ "," ++ g x ++ "," ++ b x ++ ")")
