@@ -5333,6 +5333,7 @@ var $author$project$Main$init = function (_v0) {
 			graph: $author$project$Main$initGraph,
 			history: _List_Nil,
 			rndSeed: $elm$random$Random$initialSeed(42),
+			scalePreset: 'major',
 			screenSize: {height: h, width: w}
 		},
 		$elm$core$Platform$Cmd$none);
@@ -6642,6 +6643,42 @@ var $author$project$Main$setNote = F3(
 			return model;
 		}
 	});
+var $author$project$Main$pentaTonic = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
+var $author$project$Main$setScale = F2(
+	function (str, model) {
+		var updateEntry = F2(
+			function (pitch, _v1) {
+				var g = _v1.a;
+				return $author$project$Main$GraphEntry(
+					_Utils_update(
+						g,
+						{
+							note: A2($author$project$Main$withPitchClass, pitch, g.note)
+						}));
+			});
+		var pitches = function () {
+			switch (str) {
+				case 'major':
+					return $author$project$Main$majorScale;
+				case 'pentatonic':
+					return $author$project$Main$pentaTonic;
+				case 'chromatic':
+					return $author$project$Main$allPitchClasses;
+				default:
+					return $author$project$Main$allPitchClasses;
+			}
+		}();
+		var newGraph = $elm$core$Array$fromList(
+			A3(
+				$elm$core$List$map2,
+				updateEntry,
+				pitches,
+				$elm$core$Array$toList(model.graph)));
+		return _Utils_update(
+			model,
+			{graph: newGraph});
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6697,10 +6734,15 @@ var $author$project$Main$update = F2(
 					$author$project$Main$generateAll(
 						$author$project$Main$randomizeAllNotes(model)),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'RandomizeOpts':
 				return _Utils_Tuple2(
 					$author$project$Main$generateAll(
 						$author$project$Main$randomizeOpts(model)),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var scale = msg.a;
+				return _Utils_Tuple2(
+					A2($author$project$Main$setScale, scale, model),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6919,27 +6961,10 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$ChangedInput = F2(
-	function (a, b) {
-		return {$: 'ChangedInput', a: a, b: b};
-	});
-var $author$project$Main$SelectedOctave = F2(
-	function (a, b) {
-		return {$: 'SelectedOctave', a: a, b: b};
-	});
-var $author$project$Main$SelectedPitch = F2(
-	function (a, b) {
-		return {$: 'SelectedPitch', a: a, b: b};
-	});
-var $author$project$Main$TriggerRandomNote = function (a) {
-	return {$: 'TriggerRandomNote', a: a};
+var $author$project$Main$SetScale = function (a) {
+	return {$: 'SetScale', a: a};
 };
-var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -6984,6 +7009,8 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -6992,6 +7019,57 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$selectScale = function (currentSel) {
+	var options = _List_fromArray(
+		['major', 'pentatonic', 'chromatic']);
+	var mkOpt = function (opt) {
+		return A2(
+			$elm$html$Html$option,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$value(opt),
+					$elm$html$Html$Attributes$selected(
+					_Utils_eq(currentSel, opt))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(opt)
+				]));
+	};
+	return A2(
+		$elm$html$Html$label,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Scale preset'),
+				A2(
+				$elm$html$Html$select,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onInput($author$project$Main$SetScale)
+					]),
+				A2($elm$core$List$map, mkOpt, options))
+			]));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $author$project$Main$ChangedInput = F2(
+	function (a, b) {
+		return {$: 'ChangedInput', a: a, b: b};
+	});
+var $author$project$Main$SelectedOctave = F2(
+	function (a, b) {
+		return {$: 'SelectedOctave', a: a, b: b};
+	});
+var $author$project$Main$SelectedPitch = F2(
+	function (a, b) {
+		return {$: 'SelectedPitch', a: a, b: b};
+	});
+var $author$project$Main$TriggerRandomNote = function (a) {
+	return {$: 'TriggerRandomNote', a: a};
+};
+var $elm$html$Html$input = _VirtualDom_node('input');
 var $author$project$Main$selectOctave = F2(
 	function (toMsg, currentOct) {
 		var options = A2(
@@ -7174,7 +7252,8 @@ var $author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('randomize options')
-					]))
+					])),
+				$author$project$Main$selectScale(model.scalePreset)
 			]),
 		title: 'graph tones'
 	};

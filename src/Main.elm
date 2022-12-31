@@ -21,6 +21,7 @@ import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as JD exposing (Decoder)
 import Json.Encode as JE exposing (Value)
+import List exposing (all)
 import Random
 import Time exposing (Posix)
 
@@ -30,8 +31,10 @@ port playNote : String -> Cmd msg
 
 port copyJSON : String -> Cmd msg
 
+
 blockSize =
     15
+
 
 type PitchClass
     = C
@@ -50,29 +53,17 @@ type PitchClass
 
 allPitchClasses : List PitchClass
 allPitchClasses =
-    [ C
-    , CSharp
-    , D
-    , DSharp
-    , E
-    , F
-    , FSharp
-    , G
-    , GSharp
-    , A
-    , ASharp
-    , B
-    ]
+    [ C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B ]
 
 
 majorScale : List PitchClass
 majorScale =
-    [ C, D, E, F, G, A, B, C, D, E, F, G, A, B]
+    [ C, D, E, F, G, A, B, C, D, E, F, G, A, B ]
 
 
 pentaTonic : List PitchClass
 pentaTonic =
-    [ C, D, F, G, A, C, D, F, G, A]
+    [ C, D, F, G, A, C, D, F, G, A ]
 
 
 toInt : PitchClass -> Int
@@ -370,6 +361,7 @@ type alias ScreenSize =
     , height : Int
     }
 
+type alias Scale = String
 
 type alias Model =
     { current : Int
@@ -377,6 +369,7 @@ type alias Model =
     , graph : Array GraphEntry
     , screenSize : ScreenSize
     , rndSeed : Random.Seed
+    , scalePreset : Scale
     }
 
 
@@ -408,6 +401,7 @@ init ( w, h ) =
       , history = []
       , screenSize = { width = w, height = h }
       , rndSeed = Random.initialSeed 42
+      , scalePreset = "major"
       }
     , Cmd.none
     )
@@ -428,16 +422,20 @@ type Msg
     | CopyJSON
     | RandomizeAll
     | RandomizeOpts
-
+    | SetScale String
 
 
 generateAll : Model -> Model
 generateAll model =
     let
-        num = Background.numOfBlocks model.screenSize.width model.screenSize.height blockSize
+        num =
+            Background.numOfBlocks model.screenSize.width model.screenSize.height blockSize
     in
     sequenceUpdates (List.repeat num handleTick) { model | history = [] }
-    -- use the func from background.elm
+
+
+
+-- use the func from background.elm
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -483,7 +481,7 @@ update msg model =
             ( handleTick model, playNote (lookupSelectedNote model.current model.graph) )
 
         SilentTick ->
-            ( handleTick model, Cmd.none) 
+            ( handleTick model, Cmd.none )
 
         SelectedOctave idx octStr ->
             ( selectedOctave idx octStr model, Cmd.none )
@@ -505,6 +503,35 @@ update msg model =
 
         RandomizeOpts ->
             ( randomizeOpts model |> generateAll, Cmd.none )
+
+        SetScale scale ->
+            ( setScale scale model, Cmd.none )
+
+
+setScale : String -> Model -> Model
+setScale str model =
+    let
+        pitches =
+            case str of
+                "major" ->
+                    majorScale
+
+                "pentatonic" ->
+                    pentaTonic
+
+                "chromatic" ->
+                    allPitchClasses
+
+                _ ->
+                    allPitchClasses
+
+        updateEntry pitch (GraphEntry g) =
+            GraphEntry { g | note = withPitchClass pitch g.note }
+
+        newGraph =
+            List.map2 updateEntry pitches (model.graph |> Array.toList) |> Array.fromList
+    in
+    { model | graph = newGraph }
 
 
 get : Int -> List a -> Maybe a
@@ -745,6 +772,25 @@ viewEntry idx (GraphEntry g) =
         ]
 
 
+selectScale : String -> Html Msg
+selectScale currentSel =
+    let
+        options =
+            [ "major", "pentatonic", "chromatic" ]
+
+        mkOpt opt =
+            Html.option
+                [ Attr.value opt
+                , Attr.selected (currentSel == opt)
+                ]
+                [ Html.text opt ]
+    in
+    Html.label []
+        [ Html.text "Scale preset"
+        , Html.select [ Events.onInput SetScale ] (List.map mkOpt options)
+        ]
+
+
 
 -- VIEW
 
@@ -774,6 +820,7 @@ view model =
         , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
         , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
         , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
+        , selectScale model.scalePreset
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
