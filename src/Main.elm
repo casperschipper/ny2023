@@ -250,6 +250,37 @@ randomNote =
     Random.map2 Note oct randClass
 
 
+randomNoteOfClass : String -> Random.Generator Note
+randomNoteOfClass str =
+    let
+        class =
+            case str of
+                "pentatonic" ->
+                    pentaTonic
+
+                "chromatic" ->
+                    allPitchClasses
+
+                "major" ->
+                    majorScale
+
+                _ ->
+                    pentaTonic
+
+        randClass =
+            Random.int 0 (List.length class)
+                |> Random.map
+                    (\idx ->
+                        Array.get idx (Array.fromList class)
+                            |> Maybe.withDefault C
+                    )
+
+        oct =
+            Random.int 1 4
+    in
+    Random.map2 Note oct randClass
+
+
 asString : Note -> String
 asString (Note oct pitch) =
     pAsString pitch ++ String.fromInt oct
@@ -299,10 +330,14 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions model =
     Sub.batch
-        [ Time.every 250.0 Tick
-        ]
+        (if model.playing then
+            [ Time.every 250 Tick ]
+
+         else
+            []
+        )
 
 
 graphSize : Int
@@ -361,7 +396,10 @@ type alias ScreenSize =
     , height : Int
     }
 
-type alias Scale = String
+
+type alias Scale =
+    String
+
 
 type alias Model =
     { current : Int
@@ -370,6 +408,7 @@ type alias Model =
     , screenSize : ScreenSize
     , rndSeed : Random.Seed
     , scalePreset : Scale
+    , playing : Bool
     }
 
 
@@ -402,6 +441,7 @@ init ( w, h ) =
       , screenSize = { width = w, height = h }
       , rndSeed = Random.initialSeed 42
       , scalePreset = "major"
+      , playing = True
       }
     , Cmd.none
     )
@@ -423,6 +463,8 @@ type Msg
     | RandomizeAll
     | RandomizeOpts
     | SetScale String
+    | Start
+    | Stop
 
 
 generateAll : Model -> Model
@@ -507,6 +549,12 @@ update msg model =
         SetScale scale ->
             ( setScale scale model, Cmd.none )
 
+        Stop ->
+            ( { model | playing = False }, Cmd.none )
+
+        Start ->
+            ( { model | playing = True }, Cmd.none )
+
 
 setScale : String -> Model -> Model
 setScale str model =
@@ -528,8 +576,24 @@ setScale str model =
         updateEntry pitch (GraphEntry g) =
             GraphEntry { g | note = withPitchClass pitch g.note }
 
+        nPitches =
+            List.length pitches
+
+        nMissing =
+            if nPitches > Array.length model.graph then
+                0
+
+            else
+                nPitches - Array.length model.graph
+
+        graphEntry =
+            GraphEntry { value = String.fromInt 0, array = [ 0 ] |> Array.fromList, note = Note 3 C }
+
+        filledGraph =
+            (model.graph |> Array.toList) ++ List.repeat nMissing graphEntry
+
         newGraph =
-            List.map2 updateEntry pitches (model.graph |> Array.toList) |> Array.fromList
+            List.map2 updateEntry pitches filledGraph |> Array.fromList
     in
     { model | graph = newGraph }
 
@@ -640,7 +704,7 @@ randomizeAllNotes model =
             model.graph |> Array.toList
 
         ( randomNotes, newSeed ) =
-            Random.step (Random.list (List.length entryLst) randomNote) model.rndSeed
+            Random.step (Random.list (List.length entryLst) (randomNoteOfClass model.scalePreset)) model.rndSeed
 
         updateNotes (GraphEntry g) newNote =
             GraphEntry
@@ -795,6 +859,15 @@ selectScale currentSel =
 -- VIEW
 
 
+playButton : Model -> Html Msg
+playButton model =
+    if model.playing then
+        Html.button [ Events.onClick Stop ] [ Html.text "stop" ]
+
+    else
+        Html.button [ Events.onClick Start ] [ Html.text "start" ]
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
@@ -820,6 +893,7 @@ view model =
         , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
         , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
         , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
+        , playButton model
         , selectScale model.scalePreset
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")

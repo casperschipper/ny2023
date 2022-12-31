@@ -5332,6 +5332,7 @@ var $author$project$Main$init = function (_v0) {
 			current: 0,
 			graph: $author$project$Main$initGraph,
 			history: _List_Nil,
+			playing: true,
 			rndSeed: $elm$random$Random$initialSeed(42),
 			scalePreset: 'major',
 			screenSize: {height: h, width: w}
@@ -5758,12 +5759,12 @@ var $elm$time$Time$every = F2(
 		return $elm$time$Time$subscription(
 			A2($elm$time$Time$Every, interval, tagger));
 	});
-var $author$project$Main$subscriptions = function (_v0) {
+var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
+		model.playing ? _List_fromArray(
 			[
-				A2($elm$time$Time$every, 250.0, $author$project$Main$Tick)
-			]));
+				A2($elm$time$Time$every, 250, $author$project$Main$Tick)
+			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(
 	function (a, b) {
@@ -6346,6 +6347,39 @@ var $elm$random$Random$list = F2(
 				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
 			});
 	});
+var $author$project$Main$pentaTonic = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
+var $author$project$Main$randomNoteOfClass = function (str) {
+	var oct = A2($elm$random$Random$int, 1, 4);
+	var _class = function () {
+		switch (str) {
+			case 'pentatonic':
+				return $author$project$Main$pentaTonic;
+			case 'chromatic':
+				return $author$project$Main$allPitchClasses;
+			case 'major':
+				return $author$project$Main$majorScale;
+			default:
+				return $author$project$Main$pentaTonic;
+		}
+	}();
+	var randClass = A2(
+		$elm$random$Random$map,
+		function (idx) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Main$C,
+				A2(
+					$elm$core$Array$get,
+					idx,
+					$elm$core$Array$fromList(_class)));
+		},
+		A2(
+			$elm$random$Random$int,
+			0,
+			$elm$core$List$length(_class)));
+	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
+};
 var $author$project$Main$randomizeAllNotes = function (model) {
 	var updateNotes = F2(
 		function (_v1, newNote) {
@@ -6361,7 +6395,7 @@ var $author$project$Main$randomizeAllNotes = function (model) {
 		A2(
 			$elm$random$Random$list,
 			$elm$core$List$length(entryLst),
-			$author$project$Main$randomNote),
+			$author$project$Main$randomNoteOfClass(model.scalePreset)),
 		model.rndSeed);
 	var randomNotes = _v0.a;
 	var newSeed = _v0.b;
@@ -6643,8 +6677,6 @@ var $author$project$Main$setNote = F3(
 			return model;
 		}
 	});
-var $author$project$Main$pentaTonic = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
 var $author$project$Main$setScale = F2(
 	function (str, model) {
 		var updateEntry = F2(
@@ -6669,12 +6701,23 @@ var $author$project$Main$setScale = F2(
 					return $author$project$Main$allPitchClasses;
 			}
 		}();
+		var nPitches = $elm$core$List$length(pitches);
+		var nMissing = (_Utils_cmp(
+			nPitches,
+			$elm$core$Array$length(model.graph)) > 0) ? 0 : (nPitches - $elm$core$Array$length(model.graph));
+		var graphEntry = $author$project$Main$GraphEntry(
+			{
+				array: $elm$core$Array$fromList(
+					_List_fromArray(
+						[0])),
+				note: A2($author$project$Main$Note, 3, $author$project$Main$C),
+				value: $elm$core$String$fromInt(0)
+			});
+		var filledGraph = _Utils_ap(
+			$elm$core$Array$toList(model.graph),
+			A2($elm$core$List$repeat, nMissing, graphEntry));
 		var newGraph = $elm$core$Array$fromList(
-			A3(
-				$elm$core$List$map2,
-				updateEntry,
-				pitches,
-				$elm$core$Array$toList(model.graph)));
+			A3($elm$core$List$map2, updateEntry, pitches, filledGraph));
 		return _Utils_update(
 			model,
 			{graph: newGraph});
@@ -6739,10 +6782,22 @@ var $author$project$Main$update = F2(
 					$author$project$Main$generateAll(
 						$author$project$Main$randomizeOpts(model)),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'SetScale':
 				var scale = msg.a;
 				return _Utils_Tuple2(
 					A2($author$project$Main$setScale, scale, model),
+					$elm$core$Platform$Cmd$none);
+			case 'Stop':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{playing: false}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{playing: true}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6960,6 +7015,36 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $author$project$Main$Start = {$: 'Start'};
+var $author$project$Main$Stop = {$: 'Stop'};
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$playButton = function (model) {
+	var _v0 = model.playing;
+	if (_v0) {
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onClick($author$project$Main$Stop)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('stop')
+				]));
+	} else {
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onClick($author$project$Main$Start)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('start')
+				]));
+	}
+};
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$Main$SetScale = function (a) {
 	return {$: 'SetScale', a: a};
@@ -7009,8 +7094,6 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7253,6 +7336,7 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$text('randomize options')
 					])),
+				$author$project$Main$playButton(model),
 				$author$project$Main$selectScale(model.scalePreset)
 			]),
 		title: 'graph tones'
