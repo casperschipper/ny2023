@@ -62,13 +62,16 @@ allPitchClasses =
     , B
     ]
 
+
 majorScale : List PitchClass
-majorScale = 
-    [C,D,E,F,G,A,B]
+majorScale =
+    [ C, D, E, F, G, A, B ]
+
 
 pentaTonic : List PitchClass
 pentaTonic =
-    [C,D,F,G,A]
+    [ C, D, F, G, A ]
+
 
 toInt : PitchClass -> Int
 toInt p =
@@ -244,7 +247,7 @@ randomNote =
             Random.int 0 (List.length allPitchClasses)
                 |> Random.map
                     (\idx ->
-                        Array.get idx (Array.fromList pentaTonic)
+                        Array.get idx (Array.fromList majorScale)
                             |> Maybe.withDefault C
                     )
 
@@ -297,7 +300,7 @@ selectOctave toMsg currentOct =
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program ( Int, Int ) Model Msg
 main =
     Browser.document { init = init, update = update, view = view, subscriptions = subscriptions }
 
@@ -305,7 +308,7 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Time.every 75.0 Tick
+        [ Time.every 250.0 Tick
         ]
 
 
@@ -360,10 +363,18 @@ intArrayToString arr =
     arr |> Array.toList |> List.map String.fromInt |> String.join " "
 
 
+type alias ScreenSize =
+    { width : Int
+    , height : Int
+    }
+
+
 type alias Model =
     { current : Int
     , history : List Int
     , graph : Array GraphEntry
+    , screenSize : ScreenSize
+    , rndSeed : Random.Seed
     }
 
 
@@ -388,11 +399,13 @@ initGraph =
     Array.initialize graphSize fromIndex
 
 
-init : flags -> ( Model, Cmd Msg )
-init _ =
+init : ( Int, Int ) -> ( Model, Cmd Msg )
+init ( w, h ) =
     ( { current = 0
       , graph = initGraph
       , history = []
+      , screenSize = { width = w, height = h }
+      , rndSeed = Random.initialSeed 42
       }
     , Cmd.none
     )
@@ -406,7 +419,6 @@ type Msg
     = ChangedInput Int String
     | SetOptions Int (Array Int)
     | Tick Posix
-    | GeneratedNext Int
     | SelectedOctave Int String
     | SelectedPitch Int String
     | TriggerRandomNote Int
@@ -459,15 +471,7 @@ update msg model =
             ( setOptions idx opts model, Cmd.none )
 
         Tick _ ->
-            handleTick model
-
-        GeneratedNext x ->
-            ( { model
-                | current = x
-                , history = x :: model.history
-              }
-            , playNote (lookupSelectedNote model.current model.graph)
-            )
+            ( handleTick model, playNote (lookupSelectedNote model.current model.graph) )
 
         SelectedOctave idx octStr ->
             ( selectedOctave idx octStr model, Cmd.none )
@@ -485,7 +489,7 @@ update msg model =
             ( model, copyJSON (modelAsJSON model) )
 
         RandomizeAll ->
-            ( model, randomizeAllNotes model )
+            (randomizeAllNotes model, Cmd.none)
 
         RandomizeOpts ->
             ( model, randomizeOpts model )
@@ -512,6 +516,19 @@ randomChoice first rest =
             )
 
 
+mostlyBelow : Int -> Int -> Random.Generator Int
+mostlyBelow idx maxIdx =
+    Random.int 0 3
+        |> Random.andThen
+            (\x ->
+                if x < 2 then
+                    Random.int 0 idx
+
+                else
+                    Random.int 0 maxIdx
+            )
+
+
 randomizeOpts : Model -> Cmd Msg
 randomizeOpts model =
     let
@@ -519,8 +536,8 @@ randomizeOpts model =
             Array.length model.graph
 
         fromChoice idx choice =
-            Random.list choice (Random.int 0 maxIndex)
-                |> Random.map (\rlst -> ((modBy maxIndex (idx + 1)) :: rlst) |> Array.fromList)
+            Random.list choice (Random.int 0 idx)
+                |> Random.map (\rlst -> (modBy maxIndex (idx + 1) :: rlst) |> Array.fromList)
     in
     List.range 0 maxIndex
         |> List.map
@@ -550,11 +567,29 @@ setOptions idx opts model =
             model
 
 
-randomizeAllNotes : Model -> Cmd Msg
+
+randomizeAllNotes : Model -> Model
 randomizeAllNotes model =
-    List.range 0 (Array.length model.graph)
-        |> List.map (\idx -> Random.generate (SetNote idx) randomNote)
-        |> Cmd.batch
+    let
+        entryLst =
+            model.graph |> Array.toList
+
+        ( randomNotes, newSeed ) =
+            Random.step (Random.list (List.length entryLst) randomNote) model.rndSeed
+
+        updateNotes (GraphEntry g) newNote =
+            GraphEntry
+                { g
+                    | note = newNote
+                }
+
+        newGraph =
+            List.map2 updateNotes entryLst randomNotes |> Array.fromList
+    in
+    { model
+        | rndSeed = newSeed
+        , graph = newGraph 
+    }
 
 
 lookupSelectedNote : Int -> Array GraphEntry -> String
@@ -603,7 +638,7 @@ selectedPitch idx pitchStr model =
             model
 
 
-handleTick : Model -> ( Model, Cmd Msg )
+handleTick : Model -> Model
 handleTick model =
     let
         mOptions =
@@ -611,18 +646,17 @@ handleTick model =
     in
     case mOptions of
         Nothing ->
-            ( { model | current = 0 }, Cmd.none )
+            { model | current = 0 }
 
         Just (GraphEntry g) ->
             let
-                cmds =
-                    Cmd.batch
-                        [ Random.generate GeneratedNext (generateNext g.array)
-                        ]
+                ( next, nxtSeed ) =
+                    Random.step (generateNext g.array) model.rndSeed
             in
-            ( model
-            , cmds
-            )
+            { model
+                | current = next
+                , rndSeed = nxtSeed
+            }
 
 
 handleChangedInput : Int -> String -> Model -> Model
@@ -693,7 +727,7 @@ view model =
             , Attr.style "left" "0px"
             , Attr.style "z-index" "-1"
             ]
-            [ Background.backgroundSvg model.history 1000 800 ]
+            [ Background.backgroundSvg model.history model.screenSize.width model.screenSize.height ]
         , Html.text (String.fromInt model.current)
         , Html.br [] []
         , Html.pre [] [ Html.text currentEntry ]
@@ -701,6 +735,7 @@ view model =
         , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
         , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
         , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
+
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
     }

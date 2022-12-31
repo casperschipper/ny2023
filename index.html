@@ -6,6 +6,7 @@
 	<title>Elm + Websockets</title>
 	<script type="text/javascript" src="elm.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+	<style src="styles.css"></style>
 </head>
 
 <body>
@@ -14,12 +15,13 @@
 
 <script type="text/javascript">
 
-	
 
-	function start () {
+
+	function start() {
 		// Start the Elm application.
 		var app = Elm.Main.init({
 			node: document.getElementById('myapp')
+			, flags: [window.innerWidth, window.innerHeight]
 		});
 		app.ports.copyJSON.subscribe(function (jsonStr) {
 			navigator.clipboard.writeText(jsonStr);
@@ -28,7 +30,7 @@
 
 		app.ports.playNote.subscribe(function (note) {
 			var now = Tone.now();
-			synth.triggerAttackRelease(note, "16n",now);
+			synth.triggerAttackRelease(note, "64n", now);
 		});
 	}
 

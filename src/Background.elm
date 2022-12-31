@@ -13,8 +13,8 @@ coordinatesFromIdx screenWidth squareWidth i =
     in
     [ x (safeModBy screenWidth (i * squareWidth) |> String.fromInt)
     , y ((i // maxw) * squareWidth |> String.fromInt)
-    , width (squareWidth - 1 |> String.fromInt)
-    , height (squareWidth - 1 |> String.fromInt)
+    , width (squareWidth |> String.fromInt)
+    , height (squareWidth |> String.fromInt)
     ]
 
 
@@ -52,7 +52,7 @@ backgroundSvg history w h =
         , viewBox <| ([ 0, 0, w, h ] |> List.map String.fromInt |> String.join " ")
         ]
         (List.reverse history
-            |> List.indexedMap (\i pitchIndex -> mkRect w 25 (colorOfInt 16 pitchIndex) i)
+            |> List.indexedMap (\i pitchIndex -> mkRect w 15 (colorOfInt 16 pitchIndex) i)
         )
 
 
