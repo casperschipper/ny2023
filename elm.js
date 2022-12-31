@@ -5842,6 +5842,13 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
+var $author$project$Main$blockSize = 15;
+var $elm$random$Random$constant = function (value) {
+	return $elm$random$Random$Generator(
+		function (seed) {
+			return _Utils_Tuple2(value, seed);
+		});
+};
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
@@ -5883,6 +5890,145 @@ var $elm$core$Array$get = F2(
 			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
 			A3($elm$core$Array$getHelp, startShift, index, tree)));
 	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$generateNext = function (possible) {
+	var n = $elm$core$Array$length(possible);
+	if (!n) {
+		return $elm$random$Random$constant(-1);
+	} else {
+		var nonZero = n;
+		return A2(
+			$elm$random$Random$map,
+			function (idx) {
+				return A2(
+					$elm$core$Maybe$withDefault,
+					-1,
+					A2($elm$core$Array$get, idx, possible));
+			},
+			A2($elm$random$Random$int, 0, nonZero - 1));
+	}
+};
+var $author$project$Main$handleTick = function (model) {
+	var mOptions = A2($elm$core$Array$get, model.current, model.graph);
+	if (mOptions.$ === 'Nothing') {
+		return _Utils_update(
+			model,
+			{current: 0});
+	} else {
+		var g = mOptions.a.a;
+		var _v1 = A2(
+			$elm$random$Random$step,
+			$author$project$Main$generateNext(g.array),
+			model.rndSeed);
+		var next = _v1.a;
+		var nxtSeed = _v1.b;
+		return _Utils_update(
+			model,
+			{
+				current: next,
+				history: A2($elm$core$List$cons, next, model.history),
+				rndSeed: nxtSeed
+			});
+	}
+};
+var $author$project$Background$numOfBlocks = F3(
+	function (w, h, blocksize) {
+		return ((w / blocksize) | 0) * ((h / blocksize) | 0);
+	});
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $author$project$Main$sequenceUpdates = F2(
+	function (lst, model) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (f, x) {
+					return f(x);
+				}),
+			model,
+			lst);
+	});
+var $author$project$Main$generateAll = function (model) {
+	var num = A3($author$project$Background$numOfBlocks, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize);
+	return A2(
+		$author$project$Main$sequenceUpdates,
+		A2($elm$core$List$repeat, num, $author$project$Main$handleTick),
+		_Utils_update(
+			model,
+			{history: _List_Nil}));
+};
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -5936,15 +6082,6 @@ var $elm$core$Array$set = F3(
 			A4($elm$core$Array$setHelp, startShift, index, value, tree),
 			tail));
 	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$handleChangedInput = F3(
 	function (idx, str, model) {
 		var parseInts = A3(
@@ -5984,93 +6121,6 @@ var $author$project$Main$handleChangedInput = F3(
 				graph: A3($elm$core$Array$set, idx, entry, model.graph)
 			});
 	});
-var $elm$random$Random$constant = function (value) {
-	return $elm$random$Random$Generator(
-		function (seed) {
-			return _Utils_Tuple2(value, seed);
-		});
-};
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Bitwise$xor = _Bitwise_xor;
-var $elm$random$Random$peel = function (_v0) {
-	var state = _v0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var $elm$random$Random$int = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
-var $author$project$Main$generateNext = function (possible) {
-	var n = $elm$core$Array$length(possible);
-	if (!n) {
-		return $elm$random$Random$constant(-1);
-	} else {
-		var nonZero = n;
-		return A2(
-			$elm$random$Random$map,
-			function (idx) {
-				return A2(
-					$elm$core$Maybe$withDefault,
-					-1,
-					A2($elm$core$Array$get, idx, possible));
-			},
-			A2($elm$random$Random$int, 0, nonZero - 1));
-	}
-};
-var $author$project$Main$handleTick = function (model) {
-	var mOptions = A2($elm$core$Array$get, model.current, model.graph);
-	if (mOptions.$ === 'Nothing') {
-		return _Utils_update(
-			model,
-			{current: 0});
-	} else {
-		var g = mOptions.a.a;
-		var _v1 = A2(
-			$elm$random$Random$step,
-			$author$project$Main$generateNext(g.array),
-			model.rndSeed);
-		var next = _v1.a;
-		var nxtSeed = _v1.b;
-		return _Utils_update(
-			model,
-			{current: next, rndSeed: nxtSeed});
-	}
-};
 var $author$project$Main$pAsString = function (p) {
 	switch (p.$) {
 		case 'C':
@@ -6228,7 +6278,7 @@ var $author$project$Main$GSharp = {$: 'GSharp'};
 var $author$project$Main$allPitchClasses = _List_fromArray(
 	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
 var $author$project$Main$majorScale = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B]);
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B, $author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B]);
 var $elm$random$Random$map2 = F3(
 	function (func, _v0, _v1) {
 		var genA = _v0.a;
@@ -6320,10 +6370,6 @@ var $author$project$Main$randomizeAllNotes = function (model) {
 		model,
 		{graph: newGraph, rndSeed: newSeed});
 };
-var $author$project$Main$SetOptions = F2(
-	function (a, b) {
-		return {$: 'SetOptions', a: a, b: b};
-	});
 var $elm$random$Random$andThen = F2(
 	function (callback, _v0) {
 		var genA = _v0.a;
@@ -6395,6 +6441,48 @@ var $author$project$Main$randomChoice = F2(
 				0,
 				$elm$core$List$length(rest)));
 	});
+var $author$project$Main$intArrayToString = function (arr) {
+	return A2(
+		$elm$core$String$join,
+		' ',
+		A2(
+			$elm$core$List$map,
+			$elm$core$String$fromInt,
+			$elm$core$Array$toList(arr)));
+};
+var $author$project$Main$setOptions = F3(
+	function (idx, opts, model) {
+		var mEntry = A2($elm$core$Array$get, idx, model.graph);
+		if (mEntry.$ === 'Just') {
+			var g = mEntry.a.a;
+			var newGraph = A3(
+				$elm$core$Array$set,
+				idx,
+				$author$project$Main$GraphEntry(
+					_Utils_update(
+						g,
+						{
+							array: opts,
+							value: $author$project$Main$intArrayToString(opts)
+						})),
+				model.graph);
+			return _Utils_update(
+				model,
+				{graph: newGraph});
+		} else {
+			return model;
+		}
+	});
+var $author$project$Main$sequence = A2(
+	$elm$core$List$foldr,
+	$elm$random$Random$map2($elm$core$List$cons),
+	$elm$random$Random$constant(_List_Nil));
+var $author$project$Main$traverse = function (f) {
+	return A2(
+		$elm$core$Basics$composeL,
+		$author$project$Main$sequence,
+		$elm$core$List$map(f));
+};
 var $author$project$Main$randomizeOpts = function (model) {
 	var maxIndex = $elm$core$Array$length(model.graph);
 	var fromChoice = F2(
@@ -6413,23 +6501,31 @@ var $author$project$Main$randomizeOpts = function (model) {
 					choice,
 					A2($elm$random$Random$int, 0, idx)));
 		});
-	return $elm$core$Platform$Cmd$batch(
-		A2(
-			$elm$core$List$map,
-			function (idx) {
-				return A2(
-					$elm$random$Random$generate,
-					$author$project$Main$SetOptions(idx),
+	var generator = A2(
+		$author$project$Main$traverse,
+		function (idx) {
+			return A2(
+				$elm$random$Random$map,
+				function (opts) {
+					return A2($author$project$Main$setOptions, idx, opts);
+				},
+				A2(
+					$elm$random$Random$andThen,
+					fromChoice(idx),
 					A2(
-						$elm$random$Random$andThen,
-						fromChoice(idx),
-						A2(
-							$author$project$Main$randomChoice,
-							0,
-							_List_fromArray(
-								[0, 0, 1, 1, 2, 3]))));
-			},
-			A2($elm$core$List$range, 0, maxIndex)));
+						$author$project$Main$randomChoice,
+						0,
+						_List_fromArray(
+							[0, 0, 1, 1, 2, 3]))));
+		},
+		A2($elm$core$List$range, 0, maxIndex));
+	var _v0 = A2($elm$random$Random$step, generator, model.rndSeed);
+	var updates = _v0.a;
+	var newSeed = _v0.b;
+	var newModel = A2($author$project$Main$sequenceUpdates, updates, model);
+	return _Utils_update(
+		newModel,
+		{rndSeed: newSeed});
 };
 var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$withOctave = F2(
@@ -6546,38 +6642,6 @@ var $author$project$Main$setNote = F3(
 			return model;
 		}
 	});
-var $author$project$Main$intArrayToString = function (arr) {
-	return A2(
-		$elm$core$String$join,
-		' ',
-		A2(
-			$elm$core$List$map,
-			$elm$core$String$fromInt,
-			$elm$core$Array$toList(arr)));
-};
-var $author$project$Main$setOptions = F3(
-	function (idx, opts, model) {
-		var mEntry = A2($elm$core$Array$get, idx, model.graph);
-		if (mEntry.$ === 'Just') {
-			var g = mEntry.a.a;
-			var newGraph = A3(
-				$elm$core$Array$set,
-				idx,
-				$author$project$Main$GraphEntry(
-					_Utils_update(
-						g,
-						{
-							array: opts,
-							value: $author$project$Main$intArrayToString(opts)
-						})),
-				model.graph);
-			return _Utils_update(
-				model,
-				{graph: newGraph});
-		} else {
-			return model;
-		}
-	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6585,19 +6649,18 @@ var $author$project$Main$update = F2(
 				var idx = msg.a;
 				var str = msg.b;
 				return _Utils_Tuple2(
-					A3($author$project$Main$handleChangedInput, idx, str, model),
-					$elm$core$Platform$Cmd$none);
-			case 'SetOptions':
-				var idx = msg.a;
-				var opts = msg.b;
-				return _Utils_Tuple2(
-					A3($author$project$Main$setOptions, idx, opts, model),
+					$author$project$Main$generateAll(
+						A3($author$project$Main$handleChangedInput, idx, str, model)),
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
 				return _Utils_Tuple2(
 					$author$project$Main$handleTick(model),
 					$author$project$Main$playNote(
 						A2($author$project$Main$lookupSelectedNote, model.current, model.graph)));
+			case 'SilentTick':
+				return _Utils_Tuple2(
+					$author$project$Main$handleTick(model),
+					$elm$core$Platform$Cmd$none);
 			case 'SelectedOctave':
 				var idx = msg.a;
 				var octStr = msg.b;
@@ -6631,12 +6694,14 @@ var $author$project$Main$update = F2(
 						$author$project$Main$modelAsJSON(model)));
 			case 'RandomizeAll':
 				return _Utils_Tuple2(
-					$author$project$Main$randomizeAllNotes(model),
+					$author$project$Main$generateAll(
+						$author$project$Main$randomizeAllNotes(model)),
 					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(
-					model,
-					$author$project$Main$randomizeOpts(model));
+					$author$project$Main$generateAll(
+						$author$project$Main$randomizeOpts(model)),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$CopyJSON = {$: 'CopyJSON'};
@@ -6693,7 +6758,7 @@ var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
 var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
 var $author$project$Background$coordinatesFromIdx = F3(
 	function (screenWidth, squareWidth, i) {
-		var maxw = (screenWidth / squareWidth) | 0;
+		var maxw = ((screenWidth / squareWidth) | 0) + 1;
 		return _List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x(
@@ -6724,8 +6789,8 @@ var $author$project$Background$mkRect = F4(
 	});
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var $author$project$Background$backgroundSvg = F3(
-	function (history, w, h) {
+var $author$project$Background$backgroundSvg = F4(
+	function (history, w, h, blockSize) {
 		var ws = $elm$core$String$fromInt(w);
 		var hs = $elm$core$String$fromInt(h);
 		return A2(
@@ -6751,7 +6816,7 @@ var $author$project$Background$backgroundSvg = F3(
 						return A4(
 							$author$project$Background$mkRect,
 							w,
-							15,
+							blockSize,
 							A2($author$project$Background$colorOfInt, 16, pitchIndex),
 							i);
 					}),
@@ -7067,7 +7132,7 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A3($author$project$Background$backgroundSvg, model.history, model.screenSize.width, model.screenSize.height)
+						A4($author$project$Background$backgroundSvg, model.history, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize)
 					])),
 				$elm$html$Html$text(
 				$elm$core$String$fromInt(model.current)),

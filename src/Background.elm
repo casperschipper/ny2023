@@ -1,4 +1,4 @@
-module Background exposing (backgroundSvg)
+module Background exposing (backgroundSvg, numOfBlocks)
 
 import Html
 import Svg exposing (..)
@@ -9,7 +9,7 @@ coordinatesFromIdx : Int -> Int -> Int -> List (Svg.Attribute msg)
 coordinatesFromIdx screenWidth squareWidth i =
     let
         maxw =
-            screenWidth // squareWidth
+            (screenWidth // squareWidth) + 1
     in
     [ x (safeModBy screenWidth (i * squareWidth) |> String.fromInt)
     , y ((i // maxw) * squareWidth |> String.fromInt)
@@ -36,9 +36,12 @@ mkRect screenWidth squareWidth color x =
         )
         []
 
+numOfBlocks : Int -> Int -> Int -> Int 
+numOfBlocks w h blocksize =
+    (w // blocksize) * (h // blocksize)
 
-backgroundSvg : List Int -> Int -> Int -> Html.Html msg
-backgroundSvg history w h =
+backgroundSvg : List Int -> Int -> Int -> Int -> Html.Html msg
+backgroundSvg history w h blockSize =
     let
         ws =
             String.fromInt w
@@ -52,7 +55,7 @@ backgroundSvg history w h =
         , viewBox <| ([ 0, 0, w, h ] |> List.map String.fromInt |> String.join " ")
         ]
         (List.reverse history
-            |> List.indexedMap (\i pitchIndex -> mkRect w 15 (colorOfInt 16 pitchIndex) i)
+            |> List.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i)
         )
 
 

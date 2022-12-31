@@ -16,9 +16,9 @@ port module Main exposing (..)
 import Array exposing (Array)
 import Background
 import Browser
-import Html exposing (Html, button, div, input, text)
+import Html exposing (Html)
 import Html.Attributes as Attr
-import Html.Events as Events exposing (onClick)
+import Html.Events as Events
 import Json.Decode as JD exposing (Decoder)
 import Json.Encode as JE exposing (Value)
 import Random
@@ -30,6 +30,8 @@ port playNote : String -> Cmd msg
 
 port copyJSON : String -> Cmd msg
 
+blockSize =
+    15
 
 type PitchClass
     = C
@@ -65,12 +67,12 @@ allPitchClasses =
 
 majorScale : List PitchClass
 majorScale =
-    [ C, D, E, F, G, A, B ]
+    [ C, D, E, F, G, A, B, C, D, E, F, G, A, B]
 
 
 pentaTonic : List PitchClass
 pentaTonic =
-    [ C, D, F, G, A ]
+    [ C, D, F, G, A, C, D, F, G, A]
 
 
 toInt : PitchClass -> Int
@@ -417,8 +419,8 @@ init ( w, h ) =
 
 type Msg
     = ChangedInput Int String
-    | SetOptions Int (Array Int)
     | Tick Posix
+    | SilentTick
     | SelectedOctave Int String
     | SelectedPitch Int String
     | TriggerRandomNote Int
@@ -426,6 +428,16 @@ type Msg
     | CopyJSON
     | RandomizeAll
     | RandomizeOpts
+
+
+
+generateAll : Model -> Model
+generateAll model =
+    let
+        num = Background.numOfBlocks model.screenSize.width model.screenSize.height blockSize
+    in
+    sequenceUpdates (List.repeat num handleTick) { model | history = [] }
+    -- use the func from background.elm
 
 
 generateNext : Array Int -> Random.Generator Int
@@ -465,13 +477,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangedInput idx str ->
-            ( handleChangedInput idx str model, Cmd.none )
-
-        SetOptions idx opts ->
-            ( setOptions idx opts model, Cmd.none )
+            ( handleChangedInput idx str model |> generateAll, Cmd.none )
 
         Tick _ ->
             ( handleTick model, playNote (lookupSelectedNote model.current model.graph) )
+
+        SilentTick ->
+            ( handleTick model, Cmd.none) 
 
         SelectedOctave idx octStr ->
             ( selectedOctave idx octStr model, Cmd.none )
@@ -489,10 +501,10 @@ update msg model =
             ( model, copyJSON (modelAsJSON model) )
 
         RandomizeAll ->
-            (randomizeAllNotes model, Cmd.none)
+            ( randomizeAllNotes model |> generateAll, Cmd.none )
 
         RandomizeOpts ->
-            ( model, randomizeOpts model )
+            ( randomizeOpts model |> generateAll, Cmd.none )
 
 
 get : Int -> List a -> Maybe a
@@ -529,7 +541,7 @@ mostlyBelow idx maxIdx =
             )
 
 
-randomizeOpts : Model -> Cmd Msg
+randomizeOpts : Model -> Model
 randomizeOpts model =
     let
         maxIndex =
@@ -538,15 +550,42 @@ randomizeOpts model =
         fromChoice idx choice =
             Random.list choice (Random.int 0 idx)
                 |> Random.map (\rlst -> (modBy maxIndex (idx + 1) :: rlst) |> Array.fromList)
+
+        generator =
+            List.range 0 maxIndex
+                |> traverse
+                    (\idx ->
+                        randomChoice 0 [ 0, 0, 1, 1, 2, 3 ]
+                            |> Random.andThen (fromChoice idx)
+                            |> Random.map (\opts -> setOptions idx opts)
+                    )
+
+        ( updates, newSeed ) =
+            Random.step generator model.rndSeed
+
+        newModel =
+            sequenceUpdates updates model
     in
-    List.range 0 maxIndex
-        |> List.map
-            (\idx ->
-                randomChoice 0 [ 0, 0, 1, 1, 2, 3 ]
-                    |> Random.andThen (fromChoice idx)
-                    |> Random.generate (SetOptions idx)
-            )
-        |> Cmd.batch
+    { newModel | rndSeed = newSeed }
+
+
+
+-- taken from Random.Extra
+
+
+sequence : List (Random.Generator a) -> Random.Generator (List a)
+sequence =
+    List.foldr (Random.map2 (::)) (Random.constant [])
+
+
+traverse : (a -> Random.Generator b) -> List a -> Random.Generator (List b)
+traverse f =
+    sequence << List.map f
+
+
+sequenceUpdates : List (Model -> Model) -> Model -> Model
+sequenceUpdates lst model =
+    List.foldr (\f x -> f x) model lst
 
 
 setOptions : Int -> Array Int -> Model -> Model
@@ -565,7 +604,6 @@ setOptions idx opts model =
 
         Nothing ->
             model
-
 
 
 randomizeAllNotes : Model -> Model
@@ -588,7 +626,7 @@ randomizeAllNotes model =
     in
     { model
         | rndSeed = newSeed
-        , graph = newGraph 
+        , graph = newGraph
     }
 
 
@@ -655,6 +693,7 @@ handleTick model =
             in
             { model
                 | current = next
+                , history = next :: model.history
                 , rndSeed = nxtSeed
             }
 
@@ -727,7 +766,7 @@ view model =
             , Attr.style "left" "0px"
             , Attr.style "z-index" "-1"
             ]
-            [ Background.backgroundSvg model.history model.screenSize.width model.screenSize.height ]
+            [ Background.backgroundSvg model.history model.screenSize.width model.screenSize.height blockSize ]
         , Html.text (String.fromInt model.current)
         , Html.br [] []
         , Html.pre [] [ Html.text currentEntry ]
