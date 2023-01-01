@@ -5930,6 +5930,7 @@ var $author$project$Main$randomizeOpts = function (model) {
 var $author$project$Main$init = function (_v0) {
 	var w = _v0.a;
 	var h = _v0.b;
+	var seed = _v0.c;
 	return _Utils_Tuple2(
 		$author$project$Main$generateAll(
 			$author$project$Main$randomizeAllNotes(
@@ -5944,7 +5945,7 @@ var $author$project$Main$init = function (_v0) {
 							_List_fromArray(
 								[4, 8])),
 						playing: true,
-						rndSeed: $elm$random$Random$initialSeed(42),
+						rndSeed: $elm$random$Random$initialSeed(seed),
 						scalePreset: 'pentatonic',
 						screenSize: {height: h, width: w},
 						showControls: false
@@ -7635,8 +7636,13 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 			return A2(
 				$elm$json$Json$Decode$andThen,
 				function (_v1) {
-					return $elm$json$Json$Decode$succeed(
-						_Utils_Tuple2(_v0, _v1));
+					return A2(
+						$elm$json$Json$Decode$andThen,
+						function (_v2) {
+							return $elm$json$Json$Decode$succeed(
+								_Utils_Tuple3(_v0, _v1, _v2));
+						},
+						A2($elm$json$Json$Decode$index, 2, $elm$json$Json$Decode$int));
 				},
 				A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$int));
 		},

@@ -315,7 +315,7 @@ selectOctave toMsg currentOct =
 -- MAIN
 
 
-main : Program ( Int, Int ) Model Msg
+main : Program ( Int, Int, Int ) Model Msg
 main =
     Browser.document { init = init, update = update, view = view, subscriptions = subscriptions }
 
@@ -427,13 +427,13 @@ initGraph =
     Array.initialize graphSize fromIndex
 
 
-init : ( Int, Int ) -> ( Model, Cmd Msg )
-init ( w, h ) =
+init : ( Int, Int, Int ) -> ( Model, Cmd Msg )
+init ( w, h, seed ) =
     ( { current = 0
       , graph = initGraph
       , history = []
       , screenSize = { width = w, height = h }
-      , rndSeed = Random.initialSeed 42
+      , rndSeed = Random.initialSeed seed
       , scalePreset = "pentatonic"
       , playing = True
       , index = ( 0, [ 4, 8 ] )
@@ -1017,4 +1017,3 @@ view model =
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
     }
-*.js linguist-vendored
