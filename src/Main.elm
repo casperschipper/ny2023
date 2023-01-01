@@ -521,7 +521,7 @@ update msg model =
         ChangedInput idx str ->
             ( handleChangedInput idx str model |> generateAll, Cmd.none )
 
-        Tick voice _ ->
+        Tick _ ->
             ( timeTick model, playback model )
 
         SilentTick ->
