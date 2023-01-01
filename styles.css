@@ -1,3 +1,9 @@
+ul {
+    list-style-type: none;
+    background-color: white;
+}
+
+
 button {
     display: inline-block;
     border: none;

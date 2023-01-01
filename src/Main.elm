@@ -1,18 +1,5 @@
 port module Main exposing (..)
 
--- TODO
-{-
-
-      - Canon!
-      - save state
-      - render some graphics
-      - open and close dialogs
-
-   -- BONUS:
-   Generate opposites of complete functions
-
--}
-
 import Array exposing (Array)
 import Background
 import Browser
@@ -33,7 +20,7 @@ port copyJSON : String -> Cmd msg
 
 
 blockSize =
-    15
+    20
 
 
 type PitchClass
@@ -245,7 +232,7 @@ randomNote =
                     )
 
         oct =
-            Random.int 1 4
+            Random.int 2 3
     in
     Random.map2 Note oct randClass
 
@@ -276,7 +263,7 @@ randomNoteOfClass str =
                     )
 
         oct =
-            Random.int 1 4
+            Random.weighted (1.0, 3) [(0.25,2),(0.25,4)]
     in
     Random.map2 Note oct randClass
 
@@ -333,7 +320,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         (if model.playing then
-            [ Time.every 250 Tick ]
+            [ Time.every 75 Tick ]
 
          else
             []
@@ -409,6 +396,8 @@ type alias Model =
     , rndSeed : Random.Seed
     , scalePreset : Scale
     , playing : Bool
+    , index : Int
+    , showControls : Bool
     }
 
 
@@ -440,9 +429,14 @@ init ( w, h ) =
       , history = []
       , screenSize = { width = w, height = h }
       , rndSeed = Random.initialSeed 42
-      , scalePreset = "major"
+      , scalePreset = "pentatonic"
       , playing = True
+      , index = 0
+      , showControls = False
       }
+        |> randomizeOpts
+        |> randomizeAllNotes
+        |> generateAll
     , Cmd.none
     )
 
@@ -465,6 +459,7 @@ type Msg
     | SetScale String
     | Start
     | Stop
+    | ToggleControls
 
 
 generateAll : Model -> Model
@@ -520,7 +515,7 @@ update msg model =
             ( handleChangedInput idx str model |> generateAll, Cmd.none )
 
         Tick _ ->
-            ( handleTick model, playNote (lookupSelectedNote model.current model.graph) )
+            ( handleTick2 model, playNote (lookupSelectedNote model.index model.history model.graph) )
 
         SilentTick ->
             ( handleTick model, Cmd.none )
@@ -553,7 +548,10 @@ update msg model =
             ( { model | playing = False }, Cmd.none )
 
         Start ->
-            ( { model | playing = True }, Cmd.none )
+            ( { model | playing = True, index = 0 }, Cmd.none )
+
+        ToggleControls ->
+            ( { model | showControls = not model.showControls }, Cmd.none )
 
 
 setScale : String -> Model -> Model
@@ -646,7 +644,7 @@ randomizeOpts model =
             List.range 0 maxIndex
                 |> traverse
                     (\idx ->
-                        randomChoice 0 [ 0, 0, 1, 1, 2, 3 ]
+                        randomChoice 0 [ 0, 1, 1, 2, 4 ]
                             |> Random.andThen (fromChoice idx)
                             |> Random.map (\opts -> setOptions idx opts)
                     )
@@ -721,9 +719,17 @@ randomizeAllNotes model =
     }
 
 
-lookupSelectedNote : Int -> Array GraphEntry -> String
-lookupSelectedNote idx array =
-    Array.get idx array
+lookupSelectedNote : Int -> List Int -> Array GraphEntry -> String
+lookupSelectedNote idx history array =
+    let
+        histArr =
+            Array.fromList history
+    in
+    Array.get idx histArr
+        |> Maybe.andThen
+            (\idx2 ->
+                Array.get idx2 array
+            )
         |> Maybe.map (\(GraphEntry g) -> g.note)
         |> Maybe.withDefault (Note 3 C)
         |> asString
@@ -787,6 +793,20 @@ handleTick model =
                 , history = next :: model.history
                 , rndSeed = nxtSeed
             }
+
+
+handleTick2 : Model -> Model
+handleTick2 model =
+    let
+        newIndex =
+            model.index + 1
+
+        safeIndex =
+            modBy (max 1 (List.length model.history)) newIndex
+    in
+    { model
+        | index = safeIndex
+    }
 
 
 handleChangedInput : Int -> String -> Model -> Model
@@ -868,6 +888,28 @@ playButton model =
         Html.button [ Events.onClick Start ] [ Html.text "start" ]
 
 
+showHideControlsButton : Bool -> Html Msg
+showHideControlsButton showControls =
+    Html.label []
+        [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
+        , Html.text <|
+            if showControls then
+                "hide"
+
+            else
+                "show"
+        ]
+
+
+showIf : Bool -> List (Html.Attribute Msg)
+showIf show =
+    if show then
+        []
+
+    else
+        [ Attr.style "display" "none" ]
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
@@ -879,22 +921,35 @@ view model =
     in
     { title = "graph tones"
     , body =
-        [ Html.div
+        [ Html.text (String.fromInt model.index)
+        , showHideControlsButton model.showControls
+        , Html.br [] []
+        , Html.div
+            [ Attr.style "position" "fixed"
+            , Attr.style "top" "0px"
+            , Attr.style "left" "0px"
+            , Attr.style "z-index" "-2"
+            ]
+            [ Background.backgroundSvg model.history model.screenSize.width model.screenSize.height blockSize ]
+        , Html.div
             [ Attr.style "position" "fixed"
             , Attr.style "top" "0px"
             , Attr.style "left" "0px"
             , Attr.style "z-index" "-1"
             ]
-            [ Background.backgroundSvg model.history model.screenSize.width model.screenSize.height blockSize ]
-        , Html.text (String.fromInt model.current)
+            [ Background.cursorBox (model.index + 1) model.history model.screenSize.width model.screenSize.height blockSize ]
         , Html.br [] []
-        , Html.pre [] [ Html.text currentEntry ]
-        , Html.ul [] <| entries
-        , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
-        , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
-        , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
-        , playButton model
-        , selectScale model.scalePreset
+        , Html.div
+            (Attr.class "controls"
+                :: showIf model.showControls
+            )
+            [ Html.ul [ Attr.class " " ] <| entries
+            , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
+            , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
+            , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
+            , playButton model
+            , selectScale model.scalePreset
+            ]
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]

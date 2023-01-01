@@ -5244,6 +5244,224 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$document = _Browser_document;
 var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $author$project$Main$blockSize = 20;
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$constant = function (value) {
+	return $elm$random$Random$Generator(
+		function (seed) {
+			return _Utils_Tuple2(value, seed);
+		});
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$generateNext = function (possible) {
+	var n = $elm$core$Array$length(possible);
+	if (!n) {
+		return $elm$random$Random$constant(-1);
+	} else {
+		var nonZero = n;
+		return A2(
+			$elm$random$Random$map,
+			function (idx) {
+				return A2(
+					$elm$core$Maybe$withDefault,
+					-1,
+					A2($elm$core$Array$get, idx, possible));
+			},
+			A2($elm$random$Random$int, 0, nonZero - 1));
+	}
+};
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $author$project$Main$handleTick = function (model) {
+	var mOptions = A2($elm$core$Array$get, model.current, model.graph);
+	if (mOptions.$ === 'Nothing') {
+		return _Utils_update(
+			model,
+			{current: 0});
+	} else {
+		var g = mOptions.a.a;
+		var _v1 = A2(
+			$elm$random$Random$step,
+			$author$project$Main$generateNext(g.array),
+			model.rndSeed);
+		var next = _v1.a;
+		var nxtSeed = _v1.b;
+		return _Utils_update(
+			model,
+			{
+				current: next,
+				history: A2($elm$core$List$cons, next, model.history),
+				rndSeed: nxtSeed
+			});
+	}
+};
+var $author$project$Background$numOfBlocks = F3(
+	function (w, h, blocksize) {
+		return ((w / blocksize) | 0) * ((h / blocksize) | 0);
+	});
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $author$project$Main$sequenceUpdates = F2(
+	function (lst, model) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (f, x) {
+					return f(x);
+				}),
+			model,
+			lst);
+	});
+var $author$project$Main$generateAll = function (model) {
+	var num = A3($author$project$Background$numOfBlocks, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize);
+	return A2(
+		$author$project$Main$sequenceUpdates,
+		A2($elm$core$List$repeat, num, $author$project$Main$handleTick),
+		_Utils_update(
+			model,
+			{history: _List_Nil}));
+};
 var $author$project$Main$C = {$: 'C'};
 var $author$project$Main$GraphEntry = function (a) {
 	return {$: 'GraphEntry', a: a};
@@ -5303,16 +5521,6 @@ var $author$project$Main$initGraph = function () {
 	};
 	return A2($elm$core$Array$initialize, $author$project$Main$graphSize, fromIndex);
 }();
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
 var $elm$random$Random$initialSeed = function (x) {
 	var _v0 = $elm$random$Random$next(
 		A2($elm$random$Random$Seed, 0, 1013904223));
@@ -5324,19 +5532,419 @@ var $elm$random$Random$initialSeed = function (x) {
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$random$Random$listHelp = F4(
+	function (revList, n, gen, seed) {
+		listHelp:
+		while (true) {
+			if (n < 1) {
+				return _Utils_Tuple2(revList, seed);
+			} else {
+				var _v0 = gen(seed);
+				var value = _v0.a;
+				var newSeed = _v0.b;
+				var $temp$revList = A2($elm$core$List$cons, value, revList),
+					$temp$n = n - 1,
+					$temp$gen = gen,
+					$temp$seed = newSeed;
+				revList = $temp$revList;
+				n = $temp$n;
+				gen = $temp$gen;
+				seed = $temp$seed;
+				continue listHelp;
+			}
+		}
+	});
+var $elm$random$Random$list = F2(
+	function (n, _v0) {
+		var gen = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
+			});
+	});
+var $author$project$Main$A = {$: 'A'};
+var $author$project$Main$ASharp = {$: 'ASharp'};
+var $author$project$Main$B = {$: 'B'};
+var $author$project$Main$CSharp = {$: 'CSharp'};
+var $author$project$Main$D = {$: 'D'};
+var $author$project$Main$DSharp = {$: 'DSharp'};
+var $author$project$Main$E = {$: 'E'};
+var $author$project$Main$F = {$: 'F'};
+var $author$project$Main$FSharp = {$: 'FSharp'};
+var $author$project$Main$G = {$: 'G'};
+var $author$project$Main$GSharp = {$: 'GSharp'};
+var $author$project$Main$allPitchClasses = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
+var $author$project$Main$majorScale = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B, $author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B]);
+var $elm$random$Random$map2 = F3(
+	function (func, _v0, _v1) {
+		var genA = _v0.a;
+		var genB = _v1.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v2 = genA(seed0);
+				var a = _v2.a;
+				var seed1 = _v2.b;
+				var _v3 = genB(seed1);
+				var b = _v3.a;
+				var seed2 = _v3.b;
+				return _Utils_Tuple2(
+					A2(func, a, b),
+					seed2);
+			});
+	});
+var $author$project$Main$pentaTonic = _List_fromArray(
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$random$Random$float = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var seed1 = $elm$random$Random$next(seed0);
+				var range = $elm$core$Basics$abs(b - a);
+				var n1 = $elm$random$Random$peel(seed1);
+				var n0 = $elm$random$Random$peel(seed0);
+				var lo = (134217727 & n1) * 1.0;
+				var hi = (67108863 & n0) * 1.0;
+				var val = ((hi * 134217728.0) + lo) / 9007199254740992.0;
+				var scaled = (val * range) + a;
+				return _Utils_Tuple2(
+					scaled,
+					$elm$random$Random$next(seed1));
+			});
+	});
+var $elm$random$Random$getByWeight = F3(
+	function (_v0, others, countdown) {
+		getByWeight:
+		while (true) {
+			var weight = _v0.a;
+			var value = _v0.b;
+			if (!others.b) {
+				return value;
+			} else {
+				var second = others.a;
+				var otherOthers = others.b;
+				if (_Utils_cmp(
+					countdown,
+					$elm$core$Basics$abs(weight)) < 1) {
+					return value;
+				} else {
+					var $temp$_v0 = second,
+						$temp$others = otherOthers,
+						$temp$countdown = countdown - $elm$core$Basics$abs(weight);
+					_v0 = $temp$_v0;
+					others = $temp$others;
+					countdown = $temp$countdown;
+					continue getByWeight;
+				}
+			}
+		}
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $elm$random$Random$weighted = F2(
+	function (first, others) {
+		var normalize = function (_v0) {
+			var weight = _v0.a;
+			return $elm$core$Basics$abs(weight);
+		};
+		var total = normalize(first) + $elm$core$List$sum(
+			A2($elm$core$List$map, normalize, others));
+		return A2(
+			$elm$random$Random$map,
+			A2($elm$random$Random$getByWeight, first, others),
+			A2($elm$random$Random$float, 0, total));
+	});
+var $author$project$Main$randomNoteOfClass = function (str) {
+	var oct = A2(
+		$elm$random$Random$weighted,
+		_Utils_Tuple2(1.0, 3),
+		_List_fromArray(
+			[
+				_Utils_Tuple2(0.25, 2),
+				_Utils_Tuple2(0.25, 4)
+			]));
+	var _class = function () {
+		switch (str) {
+			case 'pentatonic':
+				return $author$project$Main$pentaTonic;
+			case 'chromatic':
+				return $author$project$Main$allPitchClasses;
+			case 'major':
+				return $author$project$Main$majorScale;
+			default:
+				return $author$project$Main$pentaTonic;
+		}
+	}();
+	var randClass = A2(
+		$elm$random$Random$map,
+		function (idx) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Main$C,
+				A2(
+					$elm$core$Array$get,
+					idx,
+					$elm$core$Array$fromList(_class)));
+		},
+		A2(
+			$elm$random$Random$int,
+			0,
+			$elm$core$List$length(_class)));
+	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
+};
+var $author$project$Main$randomizeAllNotes = function (model) {
+	var updateNotes = F2(
+		function (_v1, newNote) {
+			var g = _v1.a;
+			return $author$project$Main$GraphEntry(
+				_Utils_update(
+					g,
+					{note: newNote}));
+		});
+	var entryLst = $elm$core$Array$toList(model.graph);
+	var _v0 = A2(
+		$elm$random$Random$step,
+		A2(
+			$elm$random$Random$list,
+			$elm$core$List$length(entryLst),
+			$author$project$Main$randomNoteOfClass(model.scalePreset)),
+		model.rndSeed);
+	var randomNotes = _v0.a;
+	var newSeed = _v0.b;
+	var newGraph = $elm$core$Array$fromList(
+		A3($elm$core$List$map2, updateNotes, entryLst, randomNotes));
+	return _Utils_update(
+		model,
+		{graph: newGraph, rndSeed: newSeed});
+};
+var $elm$random$Random$andThen = F2(
+	function (callback, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				var _v1 = genA(seed);
+				var result = _v1.a;
+				var newSeed = _v1.b;
+				var _v2 = callback(result);
+				var genB = _v2.a;
+				return genB(newSeed);
+			});
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$get = F2(
+	function (nth, list) {
+		return $elm$core$List$head(
+			A2($elm$core$List$drop, nth - 1, list));
+	});
+var $author$project$Main$randomChoice = F2(
+	function (first, rest) {
+		return A2(
+			$elm$random$Random$map,
+			function (idx) {
+				if (!idx) {
+					return first;
+				} else {
+					var n = idx;
+					return A2(
+						$elm$core$Maybe$withDefault,
+						first,
+						A2(
+							$author$project$Main$get,
+							n,
+							A2($elm$core$List$cons, first, rest)));
+				}
+			},
+			A2(
+				$elm$random$Random$int,
+				0,
+				$elm$core$List$length(rest)));
+	});
+var $author$project$Main$intArrayToString = function (arr) {
+	return A2(
+		$elm$core$String$join,
+		' ',
+		A2(
+			$elm$core$List$map,
+			$elm$core$String$fromInt,
+			$elm$core$Array$toList(arr)));
+};
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (_v0.$ === 'SubTree') {
+			var subTree = _v0.a;
+			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _v0.a;
+			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var $elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4($elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var $author$project$Main$setOptions = F3(
+	function (idx, opts, model) {
+		var mEntry = A2($elm$core$Array$get, idx, model.graph);
+		if (mEntry.$ === 'Just') {
+			var g = mEntry.a.a;
+			var newGraph = A3(
+				$elm$core$Array$set,
+				idx,
+				$author$project$Main$GraphEntry(
+					_Utils_update(
+						g,
+						{
+							array: opts,
+							value: $author$project$Main$intArrayToString(opts)
+						})),
+				model.graph);
+			return _Utils_update(
+				model,
+				{graph: newGraph});
+		} else {
+			return model;
+		}
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $author$project$Main$sequence = A2(
+	$elm$core$List$foldr,
+	$elm$random$Random$map2($elm$core$List$cons),
+	$elm$random$Random$constant(_List_Nil));
+var $author$project$Main$traverse = function (f) {
+	return A2(
+		$elm$core$Basics$composeL,
+		$author$project$Main$sequence,
+		$elm$core$List$map(f));
+};
+var $author$project$Main$randomizeOpts = function (model) {
+	var maxIndex = $elm$core$Array$length(model.graph);
+	var fromChoice = F2(
+		function (idx, choice) {
+			return A2(
+				$elm$random$Random$map,
+				function (rlst) {
+					return $elm$core$Array$fromList(
+						A2(
+							$elm$core$List$cons,
+							A2($elm$core$Basics$modBy, maxIndex, idx + 1),
+							rlst));
+				},
+				A2(
+					$elm$random$Random$list,
+					choice,
+					A2($elm$random$Random$int, 0, idx)));
+		});
+	var generator = A2(
+		$author$project$Main$traverse,
+		function (idx) {
+			return A2(
+				$elm$random$Random$map,
+				function (opts) {
+					return A2($author$project$Main$setOptions, idx, opts);
+				},
+				A2(
+					$elm$random$Random$andThen,
+					fromChoice(idx),
+					A2(
+						$author$project$Main$randomChoice,
+						0,
+						_List_fromArray(
+							[0, 1, 1, 2, 4]))));
+		},
+		A2($elm$core$List$range, 0, maxIndex));
+	var _v0 = A2($elm$random$Random$step, generator, model.rndSeed);
+	var updates = _v0.a;
+	var newSeed = _v0.b;
+	var newModel = A2($author$project$Main$sequenceUpdates, updates, model);
+	return _Utils_update(
+		newModel,
+		{rndSeed: newSeed});
+};
 var $author$project$Main$init = function (_v0) {
 	var w = _v0.a;
 	var h = _v0.b;
 	return _Utils_Tuple2(
-		{
-			current: 0,
-			graph: $author$project$Main$initGraph,
-			history: _List_Nil,
-			playing: true,
-			rndSeed: $elm$random$Random$initialSeed(42),
-			scalePreset: 'major',
-			screenSize: {height: h, width: w}
-		},
+		$author$project$Main$generateAll(
+			$author$project$Main$randomizeAllNotes(
+				$author$project$Main$randomizeOpts(
+					{
+						current: 0,
+						graph: $author$project$Main$initGraph,
+						history: _List_Nil,
+						index: 0,
+						playing: true,
+						rndSeed: $elm$random$Random$initialSeed(42),
+						scalePreset: 'pentatonic',
+						screenSize: {height: h, width: w},
+						showControls: false
+					}))),
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$json$Json$Decode$int = _Json_decodeInt;
@@ -5738,11 +6346,6 @@ var $elm$time$Time$onSelfMsg = F3(
 				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
 		}
 	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
 var $elm$time$Time$subMap = F2(
 	function (f, _v0) {
 		var interval = _v0.a;
@@ -5763,7 +6366,7 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
 		model.playing ? _List_fromArray(
 			[
-				A2($elm$time$Time$every, 250, $author$project$Main$Tick)
+				A2($elm$time$Time$every, 75, $author$project$Main$Tick)
 			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(
@@ -5787,11 +6390,6 @@ var $elm$random$Random$init = A2(
 				$elm$time$Time$posixToMillis(time)));
 	},
 	$elm$time$Time$now);
-var $elm$random$Random$step = F2(
-	function (_v0, seed) {
-		var generator = _v0.a;
-		return generator(seed);
-	});
 var $elm$random$Random$onEffects = F3(
 	function (router, commands, seed) {
 		if (!commands.b) {
@@ -5814,22 +6412,6 @@ var $elm$random$Random$onSelfMsg = F3(
 	function (_v0, _v1, seed) {
 		return $elm$core$Task$succeed(seed);
 	});
-var $elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var $elm$random$Random$map = F2(
-	function (func, _v0) {
-		var genA = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v1 = genA(seed0);
-				var a = _v1.a;
-				var seed1 = _v1.b;
-				return _Utils_Tuple2(
-					func(a),
-					seed1);
-			});
-	});
 var $elm$random$Random$cmdMap = F2(
 	function (func, _v0) {
 		var generator = _v0.a;
@@ -5844,193 +6426,6 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $author$project$Main$blockSize = 15;
-var $elm$random$Random$constant = function (value) {
-	return $elm$random$Random$Generator(
-		function (seed) {
-			return _Utils_Tuple2(value, seed);
-		});
-};
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
-	});
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Bitwise$xor = _Bitwise_xor;
-var $elm$random$Random$peel = function (_v0) {
-	var state = _v0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var $elm$random$Random$int = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Main$generateNext = function (possible) {
-	var n = $elm$core$Array$length(possible);
-	if (!n) {
-		return $elm$random$Random$constant(-1);
-	} else {
-		var nonZero = n;
-		return A2(
-			$elm$random$Random$map,
-			function (idx) {
-				return A2(
-					$elm$core$Maybe$withDefault,
-					-1,
-					A2($elm$core$Array$get, idx, possible));
-			},
-			A2($elm$random$Random$int, 0, nonZero - 1));
-	}
-};
-var $author$project$Main$handleTick = function (model) {
-	var mOptions = A2($elm$core$Array$get, model.current, model.graph);
-	if (mOptions.$ === 'Nothing') {
-		return _Utils_update(
-			model,
-			{current: 0});
-	} else {
-		var g = mOptions.a.a;
-		var _v1 = A2(
-			$elm$random$Random$step,
-			$author$project$Main$generateNext(g.array),
-			model.rndSeed);
-		var next = _v1.a;
-		var nxtSeed = _v1.b;
-		return _Utils_update(
-			model,
-			{
-				current: next,
-				history: A2($elm$core$List$cons, next, model.history),
-				rndSeed: nxtSeed
-			});
-	}
-};
-var $author$project$Background$numOfBlocks = F3(
-	function (w, h, blocksize) {
-		return ((w / blocksize) | 0) * ((h / blocksize) | 0);
-	});
-var $elm$core$List$repeatHelp = F3(
-	function (result, n, value) {
-		repeatHelp:
-		while (true) {
-			if (n <= 0) {
-				return result;
-			} else {
-				var $temp$result = A2($elm$core$List$cons, value, result),
-					$temp$n = n - 1,
-					$temp$value = value;
-				result = $temp$result;
-				n = $temp$n;
-				value = $temp$value;
-				continue repeatHelp;
-			}
-		}
-	});
-var $elm$core$List$repeat = F2(
-	function (n, value) {
-		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
-	});
-var $author$project$Main$sequenceUpdates = F2(
-	function (lst, model) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (f, x) {
-					return f(x);
-				}),
-			model,
-			lst);
-	});
-var $author$project$Main$generateAll = function (model) {
-	var num = A3($author$project$Background$numOfBlocks, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize);
-	return A2(
-		$author$project$Main$sequenceUpdates,
-		A2($elm$core$List$repeat, num, $author$project$Main$handleTick),
-		_Utils_update(
-			model,
-			{history: _List_Nil}));
-};
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (maybe.$ === 'Just') {
@@ -6040,49 +6435,6 @@ var $elm$core$Maybe$map = F2(
 		} else {
 			return $elm$core$Maybe$Nothing;
 		}
-	});
-var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
-var $elm$core$Array$setHelp = F4(
-	function (shift, index, value, tree) {
-		var pos = $elm$core$Array$bitMask & (index >>> shift);
-		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-		if (_v0.$ === 'SubTree') {
-			var subTree = _v0.a;
-			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$SubTree(newSub),
-				tree);
-		} else {
-			var values = _v0.a;
-			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$Leaf(newLeaf),
-				tree);
-		}
-	});
-var $elm$core$Array$set = F3(
-	function (index, value, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			tree,
-			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A4($elm$core$Array$setHelp, startShift, index, value, tree),
-			tail));
 	});
 var $author$project$Main$handleChangedInput = F3(
 	function (idx, str, model) {
@@ -6123,6 +6475,28 @@ var $author$project$Main$handleChangedInput = F3(
 				graph: A3($elm$core$Array$set, idx, entry, model.graph)
 			});
 	});
+var $author$project$Main$handleTick2 = function (model) {
+	var newIndex = model.index + 1;
+	var safeIndex = A2(
+		$elm$core$Basics$modBy,
+		A2(
+			$elm$core$Basics$max,
+			1,
+			$elm$core$List$length(model.history)),
+		newIndex);
+	return _Utils_update(
+		model,
+		{index: safeIndex});
+};
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $author$project$Main$pAsString = function (p) {
 	switch (p.$) {
 		case 'C':
@@ -6158,8 +6532,9 @@ var $author$project$Main$asString = function (_v0) {
 		$author$project$Main$pAsString(pitch),
 		$elm$core$String$fromInt(oct));
 };
-var $author$project$Main$lookupSelectedNote = F2(
-	function (idx, array) {
+var $author$project$Main$lookupSelectedNote = F3(
+	function (idx, history, array) {
+		var histArr = $elm$core$Array$fromList(history);
 		return $author$project$Main$asString(
 			A2(
 				$elm$core$Maybe$withDefault,
@@ -6170,7 +6545,12 @@ var $author$project$Main$lookupSelectedNote = F2(
 						var g = _v0.a;
 						return g.note;
 					},
-					A2($elm$core$Array$get, idx, array))));
+					A2(
+						$elm$core$Maybe$andThen,
+						function (idx2) {
+							return A2($elm$core$Array$get, idx2, array);
+						},
+						A2($elm$core$Array$get, idx, histArr)))));
 	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Array$foldl = F3(
@@ -6265,39 +6645,8 @@ var $author$project$Main$modelAsJSON = function (model) {
 		4,
 		$author$project$Main$encodeModel(model));
 };
+var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
-var $author$project$Main$A = {$: 'A'};
-var $author$project$Main$ASharp = {$: 'ASharp'};
-var $author$project$Main$B = {$: 'B'};
-var $author$project$Main$CSharp = {$: 'CSharp'};
-var $author$project$Main$D = {$: 'D'};
-var $author$project$Main$DSharp = {$: 'DSharp'};
-var $author$project$Main$E = {$: 'E'};
-var $author$project$Main$F = {$: 'F'};
-var $author$project$Main$FSharp = {$: 'FSharp'};
-var $author$project$Main$G = {$: 'G'};
-var $author$project$Main$GSharp = {$: 'GSharp'};
-var $author$project$Main$allPitchClasses = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
-var $author$project$Main$majorScale = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B, $author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B]);
-var $elm$random$Random$map2 = F3(
-	function (func, _v0, _v1) {
-		var genA = _v0.a;
-		var genB = _v1.a;
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v2 = genA(seed0);
-				var a = _v2.a;
-				var seed1 = _v2.b;
-				var _v3 = genB(seed1);
-				var b = _v3.a;
-				var seed2 = _v3.b;
-				return _Utils_Tuple2(
-					A2(func, a, b),
-					seed2);
-			});
-	});
 var $author$project$Main$randomNote = function () {
 	var randClass = A2(
 		$elm$random$Random$map,
@@ -6314,254 +6663,9 @@ var $author$project$Main$randomNote = function () {
 			$elm$random$Random$int,
 			0,
 			$elm$core$List$length($author$project$Main$allPitchClasses)));
-	var oct = A2($elm$random$Random$int, 1, 4);
+	var oct = A2($elm$random$Random$int, 2, 3);
 	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
 }();
-var $elm$random$Random$listHelp = F4(
-	function (revList, n, gen, seed) {
-		listHelp:
-		while (true) {
-			if (n < 1) {
-				return _Utils_Tuple2(revList, seed);
-			} else {
-				var _v0 = gen(seed);
-				var value = _v0.a;
-				var newSeed = _v0.b;
-				var $temp$revList = A2($elm$core$List$cons, value, revList),
-					$temp$n = n - 1,
-					$temp$gen = gen,
-					$temp$seed = newSeed;
-				revList = $temp$revList;
-				n = $temp$n;
-				gen = $temp$gen;
-				seed = $temp$seed;
-				continue listHelp;
-			}
-		}
-	});
-var $elm$random$Random$list = F2(
-	function (n, _v0) {
-		var gen = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed) {
-				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
-			});
-	});
-var $author$project$Main$pentaTonic = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
-var $author$project$Main$randomNoteOfClass = function (str) {
-	var oct = A2($elm$random$Random$int, 1, 4);
-	var _class = function () {
-		switch (str) {
-			case 'pentatonic':
-				return $author$project$Main$pentaTonic;
-			case 'chromatic':
-				return $author$project$Main$allPitchClasses;
-			case 'major':
-				return $author$project$Main$majorScale;
-			default:
-				return $author$project$Main$pentaTonic;
-		}
-	}();
-	var randClass = A2(
-		$elm$random$Random$map,
-		function (idx) {
-			return A2(
-				$elm$core$Maybe$withDefault,
-				$author$project$Main$C,
-				A2(
-					$elm$core$Array$get,
-					idx,
-					$elm$core$Array$fromList(_class)));
-		},
-		A2(
-			$elm$random$Random$int,
-			0,
-			$elm$core$List$length(_class)));
-	return A3($elm$random$Random$map2, $author$project$Main$Note, oct, randClass);
-};
-var $author$project$Main$randomizeAllNotes = function (model) {
-	var updateNotes = F2(
-		function (_v1, newNote) {
-			var g = _v1.a;
-			return $author$project$Main$GraphEntry(
-				_Utils_update(
-					g,
-					{note: newNote}));
-		});
-	var entryLst = $elm$core$Array$toList(model.graph);
-	var _v0 = A2(
-		$elm$random$Random$step,
-		A2(
-			$elm$random$Random$list,
-			$elm$core$List$length(entryLst),
-			$author$project$Main$randomNoteOfClass(model.scalePreset)),
-		model.rndSeed);
-	var randomNotes = _v0.a;
-	var newSeed = _v0.b;
-	var newGraph = $elm$core$Array$fromList(
-		A3($elm$core$List$map2, updateNotes, entryLst, randomNotes));
-	return _Utils_update(
-		model,
-		{graph: newGraph, rndSeed: newSeed});
-};
-var $elm$random$Random$andThen = F2(
-	function (callback, _v0) {
-		var genA = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed) {
-				var _v1 = genA(seed);
-				var result = _v1.a;
-				var newSeed = _v1.b;
-				var _v2 = callback(result);
-				var genB = _v2.a;
-				return genB(newSeed);
-			});
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Main$get = F2(
-	function (nth, list) {
-		return $elm$core$List$head(
-			A2($elm$core$List$drop, nth - 1, list));
-	});
-var $author$project$Main$randomChoice = F2(
-	function (first, rest) {
-		return A2(
-			$elm$random$Random$map,
-			function (idx) {
-				if (!idx) {
-					return first;
-				} else {
-					var n = idx;
-					return A2(
-						$elm$core$Maybe$withDefault,
-						first,
-						A2(
-							$author$project$Main$get,
-							n,
-							A2($elm$core$List$cons, first, rest)));
-				}
-			},
-			A2(
-				$elm$random$Random$int,
-				0,
-				$elm$core$List$length(rest)));
-	});
-var $author$project$Main$intArrayToString = function (arr) {
-	return A2(
-		$elm$core$String$join,
-		' ',
-		A2(
-			$elm$core$List$map,
-			$elm$core$String$fromInt,
-			$elm$core$Array$toList(arr)));
-};
-var $author$project$Main$setOptions = F3(
-	function (idx, opts, model) {
-		var mEntry = A2($elm$core$Array$get, idx, model.graph);
-		if (mEntry.$ === 'Just') {
-			var g = mEntry.a.a;
-			var newGraph = A3(
-				$elm$core$Array$set,
-				idx,
-				$author$project$Main$GraphEntry(
-					_Utils_update(
-						g,
-						{
-							array: opts,
-							value: $author$project$Main$intArrayToString(opts)
-						})),
-				model.graph);
-			return _Utils_update(
-				model,
-				{graph: newGraph});
-		} else {
-			return model;
-		}
-	});
-var $author$project$Main$sequence = A2(
-	$elm$core$List$foldr,
-	$elm$random$Random$map2($elm$core$List$cons),
-	$elm$random$Random$constant(_List_Nil));
-var $author$project$Main$traverse = function (f) {
-	return A2(
-		$elm$core$Basics$composeL,
-		$author$project$Main$sequence,
-		$elm$core$List$map(f));
-};
-var $author$project$Main$randomizeOpts = function (model) {
-	var maxIndex = $elm$core$Array$length(model.graph);
-	var fromChoice = F2(
-		function (idx, choice) {
-			return A2(
-				$elm$random$Random$map,
-				function (rlst) {
-					return $elm$core$Array$fromList(
-						A2(
-							$elm$core$List$cons,
-							A2($elm$core$Basics$modBy, maxIndex, idx + 1),
-							rlst));
-				},
-				A2(
-					$elm$random$Random$list,
-					choice,
-					A2($elm$random$Random$int, 0, idx)));
-		});
-	var generator = A2(
-		$author$project$Main$traverse,
-		function (idx) {
-			return A2(
-				$elm$random$Random$map,
-				function (opts) {
-					return A2($author$project$Main$setOptions, idx, opts);
-				},
-				A2(
-					$elm$random$Random$andThen,
-					fromChoice(idx),
-					A2(
-						$author$project$Main$randomChoice,
-						0,
-						_List_fromArray(
-							[0, 0, 1, 1, 2, 3]))));
-		},
-		A2($elm$core$List$range, 0, maxIndex));
-	var _v0 = A2($elm$random$Random$step, generator, model.rndSeed);
-	var updates = _v0.a;
-	var newSeed = _v0.b;
-	var newModel = A2($author$project$Main$sequenceUpdates, updates, model);
-	return _Utils_update(
-		newModel,
-		{rndSeed: newSeed});
-};
 var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$withOctave = F2(
 	function (o, _v0) {
@@ -6734,9 +6838,9 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
 				return _Utils_Tuple2(
-					$author$project$Main$handleTick(model),
+					$author$project$Main$handleTick2(model),
 					$author$project$Main$playNote(
-						A2($author$project$Main$lookupSelectedNote, model.current, model.graph)));
+						A3($author$project$Main$lookupSelectedNote, model.index, model.history, model.graph)));
 			case 'SilentTick':
 				return _Utils_Tuple2(
 					$author$project$Main$handleTick(model),
@@ -6793,11 +6897,17 @@ var $author$project$Main$update = F2(
 						model,
 						{playing: false}),
 					$elm$core$Platform$Cmd$none);
+			case 'Start':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{index: 0, playing: true}),
+					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{playing: true}),
+						{showControls: !model.showControls}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6860,7 +6970,7 @@ var $author$project$Background$coordinatesFromIdx = F3(
 			[
 				$elm$svg$Svg$Attributes$x(
 				$elm$core$String$fromInt(
-					A2($author$project$Background$safeModBy, screenWidth, i * squareWidth))),
+					A2($author$project$Background$safeModBy, maxw, i) * squareWidth)),
 				$elm$svg$Svg$Attributes$y(
 				$elm$core$String$fromInt(((i / maxw) | 0) * squareWidth)),
 				$elm$svg$Svg$Attributes$width(
@@ -6872,21 +6982,30 @@ var $author$project$Background$coordinatesFromIdx = F3(
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
-var $author$project$Background$mkRect = F4(
-	function (screenWidth, squareWidth, color, x) {
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $author$project$Background$mkRect = F5(
+	function (screenWidth, squareWidth, color, x, marked) {
+		var border = marked ? _List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$stroke('rgb(0,0,0)'),
+				$elm$svg$Svg$Attributes$strokeWidth('2')
+			]) : _List_Nil;
 		return A2(
 			$elm$svg$Svg$rect,
 			_Utils_ap(
 				A3($author$project$Background$coordinatesFromIdx, screenWidth, squareWidth, x),
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$fill(color)
-					])),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$fill(color)
+						]),
+					border)),
 			_List_Nil);
 	});
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var $author$project$Background$backgroundSvg = F4(
+var $author$project$Background$justTheBlocks = F4(
 	function (history, w, h, blockSize) {
 		var ws = $elm$core$String$fromInt(w);
 		var hs = $elm$core$String$fromInt(h);
@@ -6900,27 +7019,74 @@ var $author$project$Background$backgroundSvg = F4(
 					A2(
 						$elm$core$String$join,
 						' ',
-						A2(
-							$elm$core$List$map,
-							$elm$core$String$fromInt,
-							_List_fromArray(
-								[0, 0, w, h]))))
+						_List_fromArray(
+							['0', '0', ws, hs])))
 				]),
 			A2(
 				$elm$core$List$indexedMap,
 				F2(
 					function (i, pitchIndex) {
-						return A4(
+						return A5(
 							$author$project$Background$mkRect,
 							w,
 							blockSize,
 							A2($author$project$Background$colorOfInt, 16, pitchIndex),
-							i);
+							i,
+							false);
 					}),
-				$elm$core$List$reverse(history)));
+				history));
+	});
+var $elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
+var $elm$html$Html$Lazy$lazy4 = $elm$virtual_dom$VirtualDom$lazy4;
+var $author$project$Background$backgroundSvg = F4(
+	function (history, w, h, blockSize) {
+		return A5($elm$html$Html$Lazy$lazy4, $author$project$Background$justTheBlocks, history, w, h, blockSize);
 	});
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $author$project$Background$cursorBox = F5(
+	function (current, history, w, h, blockSize) {
+		var ws = $elm$core$String$fromInt(w);
+		var hs = $elm$core$String$fromInt(h);
+		var color = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			A2(
+				$elm$core$Array$get,
+				current,
+				$elm$core$Array$fromList(history)));
+		return A2(
+			$elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$width(ws),
+					$elm$svg$Svg$Attributes$height(hs),
+					$elm$svg$Svg$Attributes$viewBox(
+					A2(
+						$elm$core$String$join,
+						' ',
+						_List_fromArray(
+							['0', '0', ws, hs])))
+				]),
+			_List_fromArray(
+				[
+					A5(
+					$author$project$Background$mkRect,
+					w,
+					blockSize,
+					A2($author$project$Background$colorOfInt, 16, color),
+					current,
+					true)
+				]));
+	});
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$entryAsString = function (_v0) {
 	var g = _v0.a;
@@ -7020,32 +7186,26 @@ var $author$project$Main$Stop = {$: 'Stop'};
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$playButton = function (model) {
-	var _v0 = model.playing;
-	if (_v0) {
-		return A2(
-			$elm$html$Html$button,
-			_List_fromArray(
-				[
-					$elm$html$Html$Events$onClick($author$project$Main$Stop)
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('stop')
-				]));
-	} else {
-		return A2(
-			$elm$html$Html$button,
-			_List_fromArray(
-				[
-					$elm$html$Html$Events$onClick($author$project$Main$Start)
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('start')
-				]));
-	}
+	return model.playing ? A2(
+		$elm$html$Html$button,
+		_List_fromArray(
+			[
+				$elm$html$Html$Events$onClick($author$project$Main$Stop)
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('stop')
+			])) : A2(
+		$elm$html$Html$button,
+		_List_fromArray(
+			[
+				$elm$html$Html$Events$onClick($author$project$Main$Start)
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('start')
+			]));
 };
-var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$Main$SetScale = function (a) {
 	return {$: 'SetScale', a: a};
 };
@@ -7094,13 +7254,6 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$selectScale = function (currentSel) {
 	var options = _List_fromArray(
@@ -7134,8 +7287,36 @@ var $author$project$Main$selectScale = function (currentSel) {
 				A2($elm$core$List$map, mkOpt, options))
 			]));
 };
+var $author$project$Main$ToggleControls = {$: 'ToggleControls'};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $author$project$Main$showHideControlsButton = function (showControls) {
+	return A2(
+		$elm$html$Html$label,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('checkbox'),
+						$elm$html$Html$Attributes$selected(showControls),
+						$elm$html$Html$Events$onClick($author$project$Main$ToggleControls)
+					]),
+				_List_Nil),
+				$elm$html$Html$text(
+				showControls ? 'hide' : 'show')
+			]));
+};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$Main$showIf = function (show) {
+	return show ? _List_Nil : _List_fromArray(
+		[
+			A2($elm$html$Html$Attributes$style, 'display', 'none')
+		]);
+};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Main$ChangedInput = F2(
 	function (a, b) {
@@ -7152,7 +7333,6 @@ var $author$project$Main$SelectedPitch = F2(
 var $author$project$Main$TriggerRandomNote = function (a) {
 	return {$: 'TriggerRandomNote', a: a};
 };
-var $elm$html$Html$input = _VirtualDom_node('input');
 var $author$project$Main$selectOctave = F2(
 	function (toMsg, currentOct) {
 		var options = A2(
@@ -7282,6 +7462,23 @@ var $author$project$Main$view = function (model) {
 	return {
 		body: _List_fromArray(
 			[
+				$elm$html$Html$text(
+				$elm$core$String$fromInt(model.index)),
+				$author$project$Main$showHideControlsButton(model.showControls),
+				A2($elm$html$Html$br, _List_Nil, _List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'position', 'fixed'),
+						A2($elm$html$Html$Attributes$style, 'top', '0px'),
+						A2($elm$html$Html$Attributes$style, 'left', '0px'),
+						A2($elm$html$Html$Attributes$style, 'z-index', '-2')
+					]),
+				_List_fromArray(
+					[
+						A4($author$project$Background$backgroundSvg, model.history, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize)
+					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
@@ -7293,51 +7490,57 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A4($author$project$Background$backgroundSvg, model.history, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize)
+						A5($author$project$Background$cursorBox, model.index + 1, model.history, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize)
 					])),
-				$elm$html$Html$text(
-				$elm$core$String$fromInt(model.current)),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
 				A2(
-				$elm$html$Html$pre,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(currentEntry)
-					])),
-				A2($elm$html$Html$ul, _List_Nil, entries),
+				$elm$html$Html$div,
 				A2(
-				$elm$html$Html$button,
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$class('controls'),
+					$author$project$Main$showIf(model.showControls)),
 				_List_fromArray(
 					[
-						$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('copy state to clipboard')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('randomize all notes')
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('randomize options')
-					])),
-				$author$project$Main$playButton(model),
-				$author$project$Main$selectScale(model.scalePreset)
+						A2(
+						$elm$html$Html$ul,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class(' ')
+							]),
+						entries),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('copy state to clipboard')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('randomize all notes')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('randomize options')
+							])),
+						$author$project$Main$playButton(model),
+						$author$project$Main$selectScale(model.scalePreset)
+					]))
 			]),
 		title: 'graph tones'
 	};

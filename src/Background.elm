@@ -1,6 +1,8 @@
-module Background exposing (backgroundSvg, numOfBlocks)
+module Background exposing (backgroundSvg, cursorBox, numOfBlocks)
 
+import Array
 import Html
+import Html.Lazy
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
@@ -11,7 +13,7 @@ coordinatesFromIdx screenWidth squareWidth i =
         maxw =
             (screenWidth // squareWidth) + 1
     in
-    [ x (safeModBy screenWidth (i * squareWidth) |> String.fromInt)
+    [ x ((safeModBy maxw i * squareWidth) |> String.fromInt)
     , y ((i // maxw) * squareWidth |> String.fromInt)
     , width (squareWidth |> String.fromInt)
     , height (squareWidth |> String.fromInt)
@@ -28,20 +30,52 @@ safeModBy y x =
             modBy y x
 
 
-mkRect screenWidth squareWidth color x =
+mkRect screenWidth squareWidth color x marked =
+    let
+        border =
+            if marked then
+                [ stroke "rgb(0,0,0)", strokeWidth "2" ]
+
+            else
+                []
+    in
     rect
         (coordinatesFromIdx screenWidth squareWidth x
             ++ [ fill <| color
                ]
+            ++ border
         )
         []
 
-numOfBlocks : Int -> Int -> Int -> Int 
+
+numOfBlocks : Int -> Int -> Int -> Int
 numOfBlocks w h blocksize =
     (w // blocksize) * (h // blocksize)
 
+
 backgroundSvg : List Int -> Int -> Int -> Int -> Html.Html msg
 backgroundSvg history w h blockSize =
+    Html.Lazy.lazy4 justTheBlocks history w h blockSize
+
+
+cursorBox : Int -> List Int -> Int -> Int -> Int -> Html.Html msg
+cursorBox current history w h blockSize =
+    let
+        ws =
+            String.fromInt w
+
+        hs =
+            String.fromInt h
+
+        color =
+            history |> Array.fromList |> Array.get current |> Maybe.withDefault 0
+    in
+    svg [ width ws, height hs, viewBox <| ([ "0", "0", ws, hs ] |> String.join " ") ]
+        [ mkRect w blockSize (colorOfInt 16 color) current True ]
+
+
+justTheBlocks : List Int -> Int -> Int -> Int -> Html.Html msg
+justTheBlocks history w h blockSize =
     let
         ws =
             String.fromInt w
@@ -52,10 +86,10 @@ backgroundSvg history w h blockSize =
     svg
         [ width ws
         , height hs
-        , viewBox <| ([ 0, 0, w, h ] |> List.map String.fromInt |> String.join " ")
+        , viewBox <| ([ "0", "0", ws, hs ] |> String.join " ")
         ]
-        (List.reverse history
-            |> List.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i)
+        (history
+            |> List.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i False)
         )
 
 
