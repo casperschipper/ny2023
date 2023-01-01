@@ -6366,7 +6366,10 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
 		model.playing ? _List_fromArray(
 			[
-				A2($elm$time$Time$every, 250, $author$project$Main$Tick)
+				A2(
+				$elm$time$Time$every,
+				(!A2($elm$core$Basics$modBy, 2, model.index)) ? 250 : 120,
+				$author$project$Main$Tick)
 			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(

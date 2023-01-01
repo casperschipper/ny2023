@@ -320,7 +320,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         (if model.playing then
-            [ Time.every 250 Tick ]
+            [ Time.every 75 Tick ]
 
          else
             []
