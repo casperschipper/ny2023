@@ -1017,3 +1017,4 @@ view model =
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
     }
+*.js linguist-vendored
