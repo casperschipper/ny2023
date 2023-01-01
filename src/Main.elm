@@ -263,7 +263,7 @@ randomNoteOfClass str =
                     )
 
         oct =
-            Random.weighted (1.0, 3) [(0.25,2),(0.25,4)]
+            Random.weighted ( 1.0, 3 ) [ ( 0.25, 2 ), ( 0.25, 4 ) ]
     in
     Random.map2 Note oct randClass
 
@@ -442,6 +442,8 @@ init ( w, h ) =
 
 
 
+
+
 -- UPDATE
 
 
@@ -508,14 +510,19 @@ modelAsJSON model =
     JE.encode 4 (encodeModel model)
 
 
+playback : Model -> Cmd Msg
+playback model =
+    playNote (lookupSelectedNote model.index model.history model.graph)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangedInput idx str ->
             ( handleChangedInput idx str model |> generateAll, Cmd.none )
 
-        Tick _ ->
-            ( handleTick2 model, playNote (lookupSelectedNote model.index model.history model.graph) )
+        Tick voice _ ->
+            ( timeTick model, playback model )
 
         SilentTick ->
             ( handleTick model, Cmd.none )
@@ -795,8 +802,8 @@ handleTick model =
             }
 
 
-handleTick2 : Model -> Model
-handleTick2 model =
+timeTick : Model -> Model
+timeTick model =
     let
         newIndex =
             model.index + 1
@@ -890,7 +897,7 @@ playButton model =
 
 showHideControlsButton : Bool -> Html Msg
 showHideControlsButton showControls =
-    Html.label [ Attr.style "background-color" "white"]
+    Html.label [ Attr.style "background-color" "white" ]
         [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
         , Html.text <|
             if showControls then

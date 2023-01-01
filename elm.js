@@ -6475,83 +6475,6 @@ var $author$project$Main$handleChangedInput = F3(
 				graph: A3($elm$core$Array$set, idx, entry, model.graph)
 			});
 	});
-var $author$project$Main$handleTick2 = function (model) {
-	var newIndex = model.index + 1;
-	var safeIndex = A2(
-		$elm$core$Basics$modBy,
-		A2(
-			$elm$core$Basics$max,
-			1,
-			$elm$core$List$length(model.history)),
-		newIndex);
-	return _Utils_update(
-		model,
-		{index: safeIndex});
-};
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $author$project$Main$pAsString = function (p) {
-	switch (p.$) {
-		case 'C':
-			return 'C';
-		case 'CSharp':
-			return 'C#';
-		case 'D':
-			return 'D';
-		case 'DSharp':
-			return 'D#';
-		case 'E':
-			return 'E';
-		case 'F':
-			return 'F';
-		case 'FSharp':
-			return 'F#';
-		case 'G':
-			return 'G';
-		case 'GSharp':
-			return 'G#';
-		case 'A':
-			return 'A';
-		case 'ASharp':
-			return 'A#';
-		default:
-			return 'B';
-	}
-};
-var $author$project$Main$asString = function (_v0) {
-	var oct = _v0.a;
-	var pitch = _v0.b;
-	return _Utils_ap(
-		$author$project$Main$pAsString(pitch),
-		$elm$core$String$fromInt(oct));
-};
-var $author$project$Main$lookupSelectedNote = F3(
-	function (idx, history, array) {
-		var histArr = $elm$core$Array$fromList(history);
-		return $author$project$Main$asString(
-			A2(
-				$elm$core$Maybe$withDefault,
-				A2($author$project$Main$Note, 3, $author$project$Main$C),
-				A2(
-					$elm$core$Maybe$map,
-					function (_v0) {
-						var g = _v0.a;
-						return g.note;
-					},
-					A2(
-						$elm$core$Maybe$andThen,
-						function (idx2) {
-							return A2($elm$core$Array$get, idx2, array);
-						},
-						A2($elm$core$Array$get, idx, histArr)))));
-	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Array$foldl = F3(
 	function (func, baseCase, _v0) {
@@ -6595,6 +6518,34 @@ var $elm$json$Json$Encode$object = function (pairs) {
 				}),
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
+};
+var $author$project$Main$pAsString = function (p) {
+	switch (p.$) {
+		case 'C':
+			return 'C';
+		case 'CSharp':
+			return 'C#';
+		case 'D':
+			return 'D';
+		case 'DSharp':
+			return 'D#';
+		case 'E':
+			return 'E';
+		case 'F':
+			return 'F';
+		case 'FSharp':
+			return 'F#';
+		case 'G':
+			return 'G';
+		case 'GSharp':
+			return 'G#';
+		case 'A':
+			return 'A';
+		case 'ASharp':
+			return 'A#';
+		default:
+			return 'B';
+	}
 };
 var $author$project$Main$encodeNote = function (_v0) {
 	var o = _v0.a;
@@ -6646,7 +6597,47 @@ var $author$project$Main$modelAsJSON = function (model) {
 		$author$project$Main$encodeModel(model));
 };
 var $elm$core$Basics$not = _Basics_not;
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Main$asString = function (_v0) {
+	var oct = _v0.a;
+	var pitch = _v0.b;
+	return _Utils_ap(
+		$author$project$Main$pAsString(pitch),
+		$elm$core$String$fromInt(oct));
+};
+var $author$project$Main$lookupSelectedNote = F3(
+	function (idx, history, array) {
+		var histArr = $elm$core$Array$fromList(history);
+		return $author$project$Main$asString(
+			A2(
+				$elm$core$Maybe$withDefault,
+				A2($author$project$Main$Note, 3, $author$project$Main$C),
+				A2(
+					$elm$core$Maybe$map,
+					function (_v0) {
+						var g = _v0.a;
+						return g.note;
+					},
+					A2(
+						$elm$core$Maybe$andThen,
+						function (idx2) {
+							return A2($elm$core$Array$get, idx2, array);
+						},
+						A2($elm$core$Array$get, idx, histArr)))));
+	});
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
+var $author$project$Main$playback = function (model) {
+	return $author$project$Main$playNote(
+		A3($author$project$Main$lookupSelectedNote, model.index, model.history, model.graph));
+};
 var $author$project$Main$randomNote = function () {
 	var randClass = A2(
 		$elm$random$Random$map,
@@ -6826,6 +6817,19 @@ var $author$project$Main$setScale = F2(
 			model,
 			{graph: newGraph});
 	});
+var $author$project$Main$timeTick = function (model) {
+	var newIndex = model.index + 1;
+	var safeIndex = A2(
+		$elm$core$Basics$modBy,
+		A2(
+			$elm$core$Basics$max,
+			1,
+			$elm$core$List$length(model.history)),
+		newIndex);
+	return _Utils_update(
+		model,
+		{index: safeIndex});
+};
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6838,9 +6842,8 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
 				return _Utils_Tuple2(
-					$author$project$Main$handleTick2(model),
-					$author$project$Main$playNote(
-						A3($author$project$Main$lookupSelectedNote, model.index, model.history, model.graph)));
+					$author$project$Main$timeTick(model),
+					$author$project$Main$playback(model));
 			case 'SilentTick':
 				return _Utils_Tuple2(
 					$author$project$Main$handleTick(model),
