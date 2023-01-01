@@ -5936,9 +5936,13 @@ var $author$project$Main$init = function (_v0) {
 				$author$project$Main$randomizeOpts(
 					{
 						current: 0,
+						currentVoice: 0,
 						graph: $author$project$Main$initGraph,
 						history: _List_Nil,
-						index: 0,
+						index: _Utils_Tuple2(
+							0,
+							_List_fromArray(
+								[4, 8])),
 						playing: true,
 						rndSeed: $elm$random$Random$initialSeed(42),
 						scalePreset: 'pentatonic',
@@ -6366,10 +6370,7 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
 		model.playing ? _List_fromArray(
 			[
-				A2(
-				$elm$time$Time$every,
-				(!A2($elm$core$Basics$modBy, 2, model.index)) ? 250 : 120,
-				$author$project$Main$Tick)
+				A2($elm$time$Time$every, 125, $author$project$Main$Tick)
 			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(
@@ -6600,6 +6601,31 @@ var $author$project$Main$modelAsJSON = function (model) {
 		$author$project$Main$encodeModel(model));
 };
 var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$getCurrentVoiceIndex = function (model) {
+	var _v0 = _Utils_Tuple2(model.index, model.currentVoice);
+	if (!_v0.a.b.b) {
+		var _v1 = _v0.a;
+		var idx = _v1.a;
+		return idx;
+	} else {
+		var _v2 = _v0.a;
+		var idx = _v2.a;
+		var rest = _v2.b;
+		var voiceIndex = _v0.b;
+		var arr = $elm$core$Array$fromList(
+			A2($elm$core$List$cons, idx, rest));
+		return A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			A2(
+				$elm$core$Array$get,
+				A2(
+					$elm$core$Basics$modBy,
+					$elm$core$Array$length(arr),
+					voiceIndex),
+				arr));
+	}
+};
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -6639,7 +6665,11 @@ var $author$project$Main$lookupSelectedNote = F3(
 var $author$project$Main$playNote = _Platform_outgoingPort('playNote', $elm$json$Json$Encode$string);
 var $author$project$Main$playback = function (model) {
 	return $author$project$Main$playNote(
-		A3($author$project$Main$lookupSelectedNote, model.index, model.history, model.graph));
+		A3(
+			$author$project$Main$lookupSelectedNote,
+			$author$project$Main$getCurrentVoiceIndex(model),
+			model.history,
+			model.graph));
 };
 var $author$project$Main$randomNote = function () {
 	var randClass = A2(
@@ -6818,10 +6848,40 @@ var $author$project$Main$setScale = F2(
 			A3($elm$core$List$map2, updateEntry, pitches, filledGraph));
 		return _Utils_update(
 			model,
-			{graph: newGraph});
+			{graph: newGraph, scalePreset: str});
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Main$setCurrentVoiceIndex = F2(
+	function (newx, model) {
+		var _v0 = model.index;
+		if (!_v0.b.b) {
+			return _Utils_Tuple2(newx, _List_Nil);
+		} else {
+			var idx = _v0.a;
+			var rest = _v0.b;
+			var _v1 = model.currentVoice;
+			if (!_v1) {
+				return _Utils_Tuple2(newx, rest);
+			} else {
+				var n = _v1;
+				var arr = $elm$core$Array$fromList(
+					A2($elm$core$List$cons, idx, rest));
+				var _v2 = $elm$core$Array$toList(
+					A3($elm$core$Array$set, n, newx, arr));
+				if (_v2.b) {
+					var xs = _v2.b;
+					return _Utils_Tuple2(idx, xs);
+				} else {
+					return _Utils_Tuple2(idx, _List_Nil);
+				}
+			}
+		}
 	});
 var $author$project$Main$timeTick = function (model) {
-	var newIndex = model.index + 1;
+	var newIndex = $author$project$Main$getCurrentVoiceIndex(model) + 1;
 	var safeIndex = A2(
 		$elm$core$Basics$modBy,
 		A2(
@@ -6829,9 +6889,17 @@ var $author$project$Main$timeTick = function (model) {
 			1,
 			$elm$core$List$length(model.history)),
 		newIndex);
+	var newCurrentVoice = function (x) {
+		return (_Utils_cmp(
+			x,
+			$elm$core$List$length(model.index.b) + 1) > 0) ? 0 : x;
+	}(model.currentVoice + 1);
 	return _Utils_update(
 		model,
-		{index: safeIndex});
+		{
+			currentVoice: newCurrentVoice,
+			index: A2($author$project$Main$setCurrentVoiceIndex, safeIndex, model)
+		});
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -6884,8 +6952,7 @@ var $author$project$Main$update = F2(
 						$author$project$Main$modelAsJSON(model)));
 			case 'RandomizeAll':
 				return _Utils_Tuple2(
-					$author$project$Main$generateAll(
-						$author$project$Main$randomizeAllNotes(model)),
+					$author$project$Main$randomizeAllNotes(model),
 					$elm$core$Platform$Cmd$none);
 			case 'RandomizeOpts':
 				return _Utils_Tuple2(
@@ -6907,7 +6974,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{index: 0, playing: true}),
+						{playing: true}),
 					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(
@@ -7303,7 +7370,8 @@ var $author$project$Main$showHideControlsButton = function (showControls) {
 		$elm$html$Html$label,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+				A2($elm$html$Html$Attributes$style, 'background-color', 'white'),
+				A2($elm$html$Html$Attributes$style, 'float', 'right')
 			]),
 		_List_fromArray(
 			[
@@ -7317,7 +7385,7 @@ var $author$project$Main$showHideControlsButton = function (showControls) {
 					]),
 				_List_Nil),
 				$elm$html$Html$text(
-				showControls ? 'hide' : 'show')
+				showControls ? 'close' : 'open controls')
 			]));
 };
 var $author$project$Main$showIf = function (show) {
@@ -7471,8 +7539,6 @@ var $author$project$Main$view = function (model) {
 	return {
 		body: _List_fromArray(
 			[
-				$elm$html$Html$text(
-				$elm$core$String$fromInt(model.index)),
 				$author$project$Main$showHideControlsButton(model.showControls),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
 				A2(
@@ -7499,7 +7565,13 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A5($author$project$Background$cursorBox, model.index + 1, model.history, model.screenSize.width, model.screenSize.height, $author$project$Main$blockSize)
+						A5(
+						$author$project$Background$cursorBox,
+						$author$project$Main$getCurrentVoiceIndex(model) + 1,
+						model.history,
+						model.screenSize.width,
+						model.screenSize.height,
+						$author$project$Main$blockSize)
 					])),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
 				A2(

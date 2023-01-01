@@ -23,6 +23,10 @@ blockSize =
     20
 
 
+voices =
+    [ 0, 1, 2 ]
+
+
 type PitchClass
     = C
     | CSharp
@@ -320,7 +324,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         (if model.playing then
-            [ Time.every 75 Tick ]
+            [ Time.every 125 Tick ]
 
          else
             []
@@ -396,8 +400,9 @@ type alias Model =
     , rndSeed : Random.Seed
     , scalePreset : Scale
     , playing : Bool
-    , index : Int
+    , index : ( Int, List Int )
     , showControls : Bool
+    , currentVoice : Int
     }
 
 
@@ -431,16 +436,15 @@ init ( w, h ) =
       , rndSeed = Random.initialSeed 42
       , scalePreset = "pentatonic"
       , playing = True
-      , index = 0
+      , index = ( 0, [ 4, 8 ] )
       , showControls = False
+      , currentVoice = 0
       }
         |> randomizeOpts
         |> randomizeAllNotes
         |> generateAll
     , Cmd.none
     )
-
-
 
 
 
@@ -510,9 +514,23 @@ modelAsJSON model =
     JE.encode 4 (encodeModel model)
 
 
+getCurrentVoiceIndex : Model -> Int
+getCurrentVoiceIndex model =
+    case ( model.index, model.currentVoice ) of
+        ( ( idx, [] ), _ ) ->
+            idx
+
+        ( ( idx, rest ), voiceIndex ) ->
+            let
+                arr =
+                    idx :: rest |> Array.fromList
+            in
+            Array.get (modBy (Array.length arr) voiceIndex) arr |> Maybe.withDefault 0
+
+
 playback : Model -> Cmd Msg
 playback model =
-    playNote (lookupSelectedNote model.index model.history model.graph)
+    playNote (lookupSelectedNote (getCurrentVoiceIndex model) model.history model.graph)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -543,7 +561,7 @@ update msg model =
             ( model, copyJSON (modelAsJSON model) )
 
         RandomizeAll ->
-            ( randomizeAllNotes model |> generateAll, Cmd.none )
+            ( randomizeAllNotes model, Cmd.none )
 
         RandomizeOpts ->
             ( randomizeOpts model |> generateAll, Cmd.none )
@@ -555,7 +573,7 @@ update msg model =
             ( { model | playing = False }, Cmd.none )
 
         Start ->
-            ( { model | playing = True, index = 0 }, Cmd.none )
+            ( { model | playing = True }, Cmd.none )
 
         ToggleControls ->
             ( { model | showControls = not model.showControls }, Cmd.none )
@@ -600,7 +618,7 @@ setScale str model =
         newGraph =
             List.map2 updateEntry pitches filledGraph |> Array.fromList
     in
-    { model | graph = newGraph }
+    { model | graph = newGraph, scalePreset = str }
 
 
 get : Int -> List a -> Maybe a
@@ -802,17 +820,53 @@ handleTick model =
             }
 
 
+setCurrentVoiceIndex : Int -> Model -> ( Int, List Int )
+setCurrentVoiceIndex newx model =
+    case model.index of
+        ( _, [] ) ->
+            ( newx, [] )
+
+        ( idx, rest ) ->
+            case model.currentVoice of
+                0 ->
+                    ( newx, rest )
+
+                n ->
+                    let
+                        arr =
+                            idx :: rest |> Array.fromList
+                    in
+                    case Array.set n newx arr |> Array.toList of
+                        _ :: xs ->
+                            ( idx, xs )
+
+                        [] ->
+                            ( idx, [] )
+
+
 timeTick : Model -> Model
 timeTick model =
     let
         newIndex =
-            model.index + 1
+            getCurrentVoiceIndex model + 1
 
         safeIndex =
             modBy (max 1 (List.length model.history)) newIndex
+
+        newCurrentVoice =
+            model.currentVoice
+                + 1
+                |> (\x ->
+                        if x > (List.length (Tuple.second model.index) + 1) then
+                            0
+
+                        else
+                            x
+                   )
     in
     { model
-        | index = safeIndex
+        | index = setCurrentVoiceIndex safeIndex model
+        , currentVoice = newCurrentVoice
     }
 
 
@@ -897,14 +951,14 @@ playButton model =
 
 showHideControlsButton : Bool -> Html Msg
 showHideControlsButton showControls =
-    Html.label [ Attr.style "background-color" "white" ]
+    Html.label [ Attr.style "background-color" "white", Attr.style "float" "right" ]
         [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
         , Html.text <|
             if showControls then
-                "hide"
+                "close"
 
             else
-                "show"
+                "open controls"
         ]
 
 
@@ -915,6 +969,7 @@ showIf show =
 
     else
         [ Attr.style "display" "none" ]
+
 
 
 view : Model -> Browser.Document Msg
@@ -928,8 +983,9 @@ view model =
     in
     { title = "graph tones"
     , body =
-        [ Html.text (String.fromInt model.index)
-        , showHideControlsButton model.showControls
+        [ showHideControlsButton model.showControls
+
+        -- ,   Html.text (String.fromInt (getCurrentVoiceIndex model))
         , Html.br [] []
         , Html.div
             [ Attr.style "position" "fixed"
@@ -944,7 +1000,7 @@ view model =
             , Attr.style "left" "0px"
             , Attr.style "z-index" "-1"
             ]
-            [ Background.cursorBox (model.index + 1) model.history model.screenSize.width model.screenSize.height blockSize ]
+            [ Background.cursorBox (getCurrentVoiceIndex model + 1) model.history model.screenSize.width model.screenSize.height blockSize ]
         , Html.br [] []
         , Html.div
             (Attr.class "controls"
