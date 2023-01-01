@@ -320,7 +320,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         (if model.playing then
-            [ Time.every 75 Tick ]
+            [ Time.every 250 Tick ]
 
          else
             []
@@ -890,7 +890,7 @@ playButton model =
 
 showHideControlsButton : Bool -> Html Msg
 showHideControlsButton showControls =
-    Html.label []
+    Html.label [ Attr.style "background-color" "white"]
         [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
         , Html.text <|
             if showControls then

@@ -6366,7 +6366,7 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
 		model.playing ? _List_fromArray(
 			[
-				A2($elm$time$Time$every, 75, $author$project$Main$Tick)
+				A2($elm$time$Time$every, 250, $author$project$Main$Tick)
 			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(
@@ -7289,11 +7289,16 @@ var $author$project$Main$selectScale = function (currentSel) {
 };
 var $author$project$Main$ToggleControls = {$: 'ToggleControls'};
 var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Main$showHideControlsButton = function (showControls) {
 	return A2(
 		$elm$html$Html$label,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -7309,8 +7314,6 @@ var $author$project$Main$showHideControlsButton = function (showControls) {
 				showControls ? 'hide' : 'show')
 			]));
 };
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$showIf = function (show) {
 	return show ? _List_Nil : _List_fromArray(
 		[
