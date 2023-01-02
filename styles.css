@@ -1,3 +1,13 @@
+.controls {
+    background-color: white;
+}
+
+
+.half-transparant {
+    opacity:0.2;
+    font-size:6px;
+}
+
 * {
     font-family: monospace;
 }

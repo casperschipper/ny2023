@@ -18,12 +18,17 @@
 
 
 	function start() {
-	    let seedvalue = document.getElementById("randomseed").value;
+		let seedvalue = document.getElementById("randomseed").value;
+		let jsonvalue = document.getElementById("json").value;
+
 		let parsedSeed = parseInt(seedvalue);
 		// Start the Elm application.
 		var app = Elm.Main.init({
 			node: document.getElementById('myapp')
-			, flags: [window.innerWidth, window.innerHeight, parsedSeed]
+			, flags: { "width" : window.innerWidth
+					, "height" : window.innerHeight
+					, "seed" : parsedSeed
+					, "json" : jsonvalue }
 		});
 		app.ports.copyJSON.subscribe(function (jsonStr) {
 			navigator.clipboard.writeText(jsonStr);
@@ -38,10 +43,22 @@
 
 </script>
 <label>
-<p>enter a random seed</p>
-<p>(you can pick any number you like, and it will give a different result)</p>
-<input id="randomseed" value="2023" type="number" step="1" min="0" max="1000000000">
+	<p>enter a random seed</p>
+	<p>(you can pick any number you like, and it will give a different result)</p>
+	<input id="randomseed" value="2023" type="number" step="1" min="0" max="1000000000">
 </label>
 <button onclick="start()">Start</button>
+
+
+<br>
+<div class="half-transparant">
+<label>
+	<p>
+		(optional) preset:
+	</p>
+	<input id="json" value="" type="string">
+</label>
+</div>
+
 
 </html>

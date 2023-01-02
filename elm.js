@@ -5243,7 +5243,216 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$document = _Browser_document;
-var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$array = _Json_decodeArray;
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Main$GraphEntry = function (a) {
+	return {$: 'GraphEntry', a: a};
+};
+var $author$project$Main$Note = F2(
+	function (a, b) {
+		return {$: 'Note', a: a, b: b};
+	});
+var $author$project$Main$C = {$: 'C'};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$A = {$: 'A'};
+var $author$project$Main$ASharp = {$: 'ASharp'};
+var $author$project$Main$B = {$: 'B'};
+var $author$project$Main$CSharp = {$: 'CSharp'};
+var $author$project$Main$D = {$: 'D'};
+var $author$project$Main$DSharp = {$: 'DSharp'};
+var $author$project$Main$E = {$: 'E'};
+var $author$project$Main$F = {$: 'F'};
+var $author$project$Main$FSharp = {$: 'FSharp'};
+var $author$project$Main$G = {$: 'G'};
+var $author$project$Main$GSharp = {$: 'GSharp'};
+var $author$project$Main$stringToPitchclass = function (p) {
+	switch (p) {
+		case 'C':
+			return $elm$core$Maybe$Just($author$project$Main$C);
+		case 'C#':
+			return $elm$core$Maybe$Just($author$project$Main$CSharp);
+		case 'D':
+			return $elm$core$Maybe$Just($author$project$Main$D);
+		case 'D#':
+			return $elm$core$Maybe$Just($author$project$Main$DSharp);
+		case 'E':
+			return $elm$core$Maybe$Just($author$project$Main$E);
+		case 'F':
+			return $elm$core$Maybe$Just($author$project$Main$F);
+		case 'F#':
+			return $elm$core$Maybe$Just($author$project$Main$FSharp);
+		case 'G':
+			return $elm$core$Maybe$Just($author$project$Main$G);
+		case 'G#':
+			return $elm$core$Maybe$Just($author$project$Main$GSharp);
+		case 'A':
+			return $elm$core$Maybe$Just($author$project$Main$A);
+		case 'A#':
+			return $elm$core$Maybe$Just($author$project$Main$ASharp);
+		case 'B':
+			return $elm$core$Maybe$Just($author$project$Main$B);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$decodePitchClass = A2(
+	$elm$json$Json$Decode$map,
+	function (str) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			$author$project$Main$C,
+			$author$project$Main$stringToPitchclass(str));
+	},
+	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$Main$decodeNote = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$Note,
+	A2($elm$json$Json$Decode$field, 'octave', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'pitch', $author$project$Main$decodePitchClass));
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $author$project$Main$decodeGraphEntry = A4(
+	$elm$json$Json$Decode$map3,
+	F3(
+		function (arr, v, n) {
+			return $author$project$Main$GraphEntry(
+				{array: arr, note: n, value: v});
+		}),
+	A2(
+		$elm$json$Json$Decode$field,
+		'array',
+		$elm$json$Json$Decode$array($elm$json$Json$Decode$int)),
+	A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'note', $author$project$Main$decodeNote));
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Main$decodeIndex = A3(
+	$elm$json$Json$Decode$map2,
+	$elm$core$Tuple$pair,
+	A2($elm$json$Json$Decode$field, 'first', $elm$json$Json$Decode$int),
+	A2(
+		$elm$json$Json$Decode$field,
+		'reset',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$int)));
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $author$project$Main$decodeRandomSeed = A2($elm$json$Json$Decode$map, $elm$random$Random$initialSeed, $elm$json$Json$Decode$int);
+var $author$project$Main$ScreenSize = F2(
+	function (width, height) {
+		return {height: height, width: width};
+	});
+var $author$project$Main$decodeScreensize = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$ScreenSize,
+	A2($elm$json$Json$Decode$field, 'width', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$int));
+var $author$project$Main$mkModel = function (current) {
+	return function (history) {
+		return function (graph) {
+			return function (screenSize) {
+				return function (rndSeed) {
+					return function (scalePreset) {
+						return function (playing) {
+							return function (index) {
+								return function (showControls) {
+									return function (currentVoice) {
+										return function (offset) {
+											return {current: current, currentVoice: currentVoice, graph: graph, history: history, index: index, jsonError: $elm$core$Maybe$Nothing, offset: offset, playing: playing, rndSeed: rndSeed, scalePreset: scalePreset, screenSize: screenSize, showControls: showControls};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2($elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var $author$project$Main$decodeModel = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'offset',
+	$elm$json$Json$Decode$string,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'currentVoice',
+		$elm$json$Json$Decode$int,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'showControls',
+			$elm$json$Json$Decode$bool,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'index',
+				$author$project$Main$decodeIndex,
+				A3(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'playing',
+					$elm$json$Json$Decode$bool,
+					A3(
+						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+						'scalePreset',
+						$elm$json$Json$Decode$string,
+						A3(
+							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+							'rndSeed',
+							$author$project$Main$decodeRandomSeed,
+							A3(
+								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+								'screenSize',
+								$author$project$Main$decodeScreensize,
+								A3(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+									'graph',
+									$elm$json$Json$Decode$array($author$project$Main$decodeGraphEntry),
+									A3(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+										'history',
+										$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+										A3(
+											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+											'current',
+											$elm$json$Json$Decode$int,
+											$elm$json$Json$Decode$succeed($author$project$Main$mkModel))))))))))));
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $author$project$Main$blockSize = 20;
 var $elm$random$Random$Generator = function (a) {
 	return {$: 'Generator', a: a};
@@ -5255,7 +5464,6 @@ var $elm$random$Random$constant = function (value) {
 		});
 };
 var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -5298,15 +5506,6 @@ var $elm$core$Array$get = F2(
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
-};
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
 };
 var $elm$core$Bitwise$xor = _Bitwise_xor;
 var $elm$random$Random$peel = function (_v0) {
@@ -5362,15 +5561,6 @@ var $elm$random$Random$map = F2(
 					func(a),
 					seed1);
 			});
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $author$project$Main$generateNext = function (possible) {
 	var n = $elm$core$Array$length(possible);
@@ -5462,14 +5652,6 @@ var $author$project$Main$generateAll = function (model) {
 			model,
 			{history: _List_Nil}));
 };
-var $author$project$Main$C = {$: 'C'};
-var $author$project$Main$GraphEntry = function (a) {
-	return {$: 'GraphEntry', a: a};
-};
-var $author$project$Main$Note = F2(
-	function (a, b) {
-		return {$: 'Note', a: a, b: b};
-	});
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5521,15 +5703,6 @@ var $author$project$Main$initGraph = function () {
 	};
 	return A2($elm$core$Array$initialize, $author$project$Main$graphSize, fromIndex);
 }();
-var $elm$random$Random$initialSeed = function (x) {
-	var _v0 = $elm$random$Random$next(
-		A2($elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _v0.a;
-	var incr = _v0.b;
-	var state2 = (state1 + x) >>> 0;
-	return $elm$random$Random$next(
-		A2($elm$random$Random$Seed, state2, incr));
-};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$random$Random$listHelp = F4(
@@ -5562,19 +5735,8 @@ var $elm$random$Random$list = F2(
 				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
 			});
 	});
-var $author$project$Main$A = {$: 'A'};
-var $author$project$Main$ASharp = {$: 'ASharp'};
-var $author$project$Main$B = {$: 'B'};
-var $author$project$Main$CSharp = {$: 'CSharp'};
-var $author$project$Main$D = {$: 'D'};
-var $author$project$Main$DSharp = {$: 'DSharp'};
-var $author$project$Main$E = {$: 'E'};
-var $author$project$Main$F = {$: 'F'};
-var $author$project$Main$FSharp = {$: 'FSharp'};
-var $author$project$Main$G = {$: 'G'};
-var $author$project$Main$GSharp = {$: 'GSharp'};
 var $author$project$Main$allPitchClasses = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
+	[$author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B, $author$project$Main$C, $author$project$Main$CSharp, $author$project$Main$D, $author$project$Main$DSharp, $author$project$Main$E, $author$project$Main$F, $author$project$Main$FSharp, $author$project$Main$G, $author$project$Main$GSharp, $author$project$Main$A, $author$project$Main$ASharp, $author$project$Main$B]);
 var $author$project$Main$majorScale = _List_fromArray(
 	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B, $author$project$Main$C, $author$project$Main$D, $author$project$Main$E, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$B]);
 var $elm$random$Random$map2 = F3(
@@ -5595,7 +5757,7 @@ var $elm$random$Random$map2 = F3(
 			});
 	});
 var $author$project$Main$pentaTonic = _List_fromArray(
-	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
+	[$author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A, $author$project$Main$C, $author$project$Main$D, $author$project$Main$F, $author$project$Main$G, $author$project$Main$A]);
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
@@ -5927,11 +6089,8 @@ var $author$project$Main$randomizeOpts = function (model) {
 		newModel,
 		{rndSeed: newSeed});
 };
-var $author$project$Main$init = function (_v0) {
-	var w = _v0.a;
-	var h = _v0.b;
-	var seed = _v0.c;
-	return _Utils_Tuple2(
+var $author$project$Main$init = function (flags) {
+	var _default = _Utils_Tuple2(
 		$author$project$Main$generateAll(
 			$author$project$Main$randomizeAllNotes(
 				$author$project$Main$randomizeOpts(
@@ -5944,15 +6103,40 @@ var $author$project$Main$init = function (_v0) {
 							0,
 							_List_fromArray(
 								[4, 8])),
+						jsonError: $elm$core$Maybe$Nothing,
+						offset: '4',
 						playing: true,
-						rndSeed: $elm$random$Random$initialSeed(seed),
+						rndSeed: $elm$random$Random$initialSeed(flags.seed),
 						scalePreset: 'pentatonic',
-						screenSize: {height: h, width: w},
+						screenSize: {height: flags.height, width: flags.width},
 						showControls: false
 					}))),
 		$elm$core$Platform$Cmd$none);
+	var _v0 = flags.json;
+	if (_v0 === '') {
+		return _default;
+	} else {
+		var data = _v0;
+		var _v1 = A2($elm$json$Json$Decode$decodeString, $author$project$Main$decodeModel, data);
+		if (_v1.$ === 'Ok') {
+			var model = _v1.a;
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		} else {
+			var err = _v1.a;
+			return function (_v2) {
+				var model = _v2.a;
+				var c = _v2.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							jsonError: $elm$core$Maybe$Just('sorry no json')
+						}),
+					c);
+			}(_default);
+		}
+	}
 };
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Main$Tick = function (a) {
 	return {$: 'Tick', a: a};
 };
@@ -6510,6 +6694,7 @@ var $elm$json$Json$Encode$array = F2(
 				_Json_emptyArray(_Utils_Tuple0),
 				entries));
 	});
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
@@ -6583,6 +6768,50 @@ var $author$project$Main$encodeGraphEntry = function (_v0) {
 				$author$project$Main$encodeNote(g.note))
 			]));
 };
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $author$project$Main$encodeIndex = function (_v0) {
+	var first = _v0.a;
+	var rest = _v0.b;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'first',
+				$elm$json$Json$Encode$int(first)),
+				_Utils_Tuple2(
+				'rest',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$int, rest))
+			]));
+};
+var $elm$random$Random$maxInt = 2147483647;
+var $author$project$Main$encodeRandomSeed = function (seed) {
+	var _v0 = A2(
+		$elm$random$Random$step,
+		A2($elm$random$Random$int, 0, $elm$random$Random$maxInt),
+		seed);
+	var x = _v0.a;
+	return $elm$json$Json$Encode$int(x);
+};
+var $author$project$Main$encodeScreensize = function (scrSize) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'width',
+				$elm$json$Json$Encode$int(scrSize.width)),
+				_Utils_Tuple2(
+				'height',
+				$elm$json$Json$Encode$int(scrSize.height))
+			]));
+};
 var $author$project$Main$encodeModel = function (model) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -6591,8 +6820,35 @@ var $author$project$Main$encodeModel = function (model) {
 				'current',
 				$elm$json$Json$Encode$int(model.current)),
 				_Utils_Tuple2(
+				'history',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$int, model.history)),
+				_Utils_Tuple2(
 				'graph',
-				A2($elm$json$Json$Encode$array, $author$project$Main$encodeGraphEntry, model.graph))
+				A2($elm$json$Json$Encode$array, $author$project$Main$encodeGraphEntry, model.graph)),
+				_Utils_Tuple2(
+				'screenSize',
+				$author$project$Main$encodeScreensize(model.screenSize)),
+				_Utils_Tuple2(
+				'rndSeed',
+				$author$project$Main$encodeRandomSeed(model.rndSeed)),
+				_Utils_Tuple2(
+				'scalePreset',
+				$elm$json$Json$Encode$string(model.scalePreset)),
+				_Utils_Tuple2(
+				'playing',
+				$elm$json$Json$Encode$bool(model.playing)),
+				_Utils_Tuple2(
+				'index',
+				$author$project$Main$encodeIndex(model.index)),
+				_Utils_Tuple2(
+				'showControls',
+				$elm$json$Json$Encode$bool(model.showControls)),
+				_Utils_Tuple2(
+				'currentVoice',
+				$elm$json$Json$Encode$int(model.currentVoice)),
+				_Utils_Tuple2(
+				'offset',
+				$elm$json$Json$Encode$string(model.offset))
 			]));
 };
 var $author$project$Main$modelAsJSON = function (model) {
@@ -6724,36 +6980,6 @@ var $author$project$Main$selectedOctave = F3(
 			return model;
 		}
 	});
-var $author$project$Main$stringToPitchclass = function (p) {
-	switch (p) {
-		case 'C':
-			return $elm$core$Maybe$Just($author$project$Main$C);
-		case 'C#':
-			return $elm$core$Maybe$Just($author$project$Main$CSharp);
-		case 'D':
-			return $elm$core$Maybe$Just($author$project$Main$D);
-		case 'D#':
-			return $elm$core$Maybe$Just($author$project$Main$DSharp);
-		case 'E':
-			return $elm$core$Maybe$Just($author$project$Main$E);
-		case 'F':
-			return $elm$core$Maybe$Just($author$project$Main$F);
-		case 'F#':
-			return $elm$core$Maybe$Just($author$project$Main$FSharp);
-		case 'G':
-			return $elm$core$Maybe$Just($author$project$Main$G);
-		case 'G#':
-			return $elm$core$Maybe$Just($author$project$Main$GSharp);
-		case 'A':
-			return $elm$core$Maybe$Just($author$project$Main$A);
-		case 'A#':
-			return $elm$core$Maybe$Just($author$project$Main$ASharp);
-		case 'B':
-			return $elm$core$Maybe$Just($author$project$Main$B);
-		default:
-			return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Main$withPitchClass = F2(
 	function (pi, _v0) {
 		var o = _v0.a;
@@ -6805,6 +7031,22 @@ var $author$project$Main$setNote = F3(
 		} else {
 			return model;
 		}
+	});
+var $author$project$Main$setOffset = F2(
+	function (input, model) {
+		var off = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$String$toInt(input));
+		return _Utils_update(
+			model,
+			{
+				index: _Utils_Tuple2(
+					0,
+					_List_fromArray(
+						[0 + off, 0 + (2 * off)])),
+				offset: input
+			});
 	});
 var $author$project$Main$setScale = F2(
 	function (str, model) {
@@ -6977,11 +7219,16 @@ var $author$project$Main$update = F2(
 						model,
 						{playing: true}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'ToggleControls':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{showControls: !model.showControls}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var inputStr = msg.a;
+				return _Utils_Tuple2(
+					A2($author$project$Main$setOffset, inputStr, model),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -7162,6 +7409,69 @@ var $author$project$Background$cursorBox = F5(
 				]));
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Main$SetOffset = function (a) {
+	return {$: 'SetOffset', a: a};
+};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$editOffset = function (off) {
+	return A2(
+		$elm$html$Html$label,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('number'),
+						$elm$html$Html$Attributes$min('0'),
+						$elm$html$Html$Attributes$max('100'),
+						$elm$html$Html$Attributes$value(off),
+						$elm$html$Html$Events$onInput($author$project$Main$SetOffset)
+					]),
+				_List_Nil),
+				$elm$html$Html$text('setoffset')
+			]));
+};
 var $author$project$Main$entryAsString = function (_v0) {
 	var g = _v0.a;
 	return g.value + ('\narray: ' + A3(
@@ -7241,7 +7551,6 @@ var $elm$core$Array$map = F2(
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$on = F2(
 	function (event, decoder) {
 		return A2(
@@ -7257,8 +7566,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $author$project$Main$Start = {$: 'Start'};
 var $author$project$Main$Stop = {$: 'Stop'};
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$playButton = function (model) {
 	return model.playing ? A2(
 		$elm$html$Html$button,
@@ -7283,43 +7590,8 @@ var $author$project$Main$playButton = function (model) {
 var $author$project$Main$SetScale = function (a) {
 	return {$: 'SetScale', a: a};
 };
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -7328,7 +7600,6 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$selectScale = function (currentSel) {
 	var options = _List_fromArray(
 		['major', 'pentatonic', 'chromatic']);
@@ -7362,10 +7633,8 @@ var $author$project$Main$selectScale = function (currentSel) {
 			]));
 };
 var $author$project$Main$ToggleControls = {$: 'ToggleControls'};
-var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Main$showHideControlsButton = function (showControls) {
 	return A2(
 		$elm$html$Html$label,
@@ -7598,7 +7867,7 @@ var $author$project$Main$view = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('copy state to clipboard')
+								$elm$html$Html$text('copy preset to clipboard')
 							])),
 						A2(
 						$elm$html$Html$button,
@@ -7621,7 +7890,8 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$text('randomize options')
 							])),
 						$author$project$Main$playButton(model),
-						$author$project$Main$selectScale(model.scalePreset)
+						$author$project$Main$selectScale(model.scalePreset),
+						$author$project$Main$editOffset(model.offset)
 					]))
 			]),
 		title: 'graph tones'
@@ -7632,18 +7902,23 @@ var $author$project$Main$main = $elm$browser$Browser$document(
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
-		function (_v0) {
+		function (width) {
 			return A2(
 				$elm$json$Json$Decode$andThen,
-				function (_v1) {
+				function (seed) {
 					return A2(
 						$elm$json$Json$Decode$andThen,
-						function (_v2) {
-							return $elm$json$Json$Decode$succeed(
-								_Utils_Tuple3(_v0, _v1, _v2));
+						function (json) {
+							return A2(
+								$elm$json$Json$Decode$andThen,
+								function (height) {
+									return $elm$json$Json$Decode$succeed(
+										{height: height, json: json, seed: seed, width: width});
+								},
+								A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$int));
 						},
-						A2($elm$json$Json$Decode$index, 2, $elm$json$Json$Decode$int));
+						A2($elm$json$Json$Decode$field, 'json', $elm$json$Json$Decode$string));
 				},
-				A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$int));
+				A2($elm$json$Json$Decode$field, 'seed', $elm$json$Json$Decode$int));
 		},
-		A2($elm$json$Json$Decode$index, 0, $elm$json$Json$Decode$int)))(0)}});}(this));
+		A2($elm$json$Json$Decode$field, 'width', $elm$json$Json$Decode$int)))(0)}});}(this));

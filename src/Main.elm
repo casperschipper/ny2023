@@ -7,16 +7,77 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as JD exposing (Decoder)
+import Json.Decode.Pipeline as JDP exposing (required)
 import Json.Encode as JE exposing (Value)
 import List exposing (all)
 import Random
 import Time exposing (Posix)
 
 
+
+-- PORTS
+-- playnote in tone.js
+
+
 port playNote : String -> Cmd msg
 
 
+
+-- copy the  complete state to the clipboard
+
+
 port copyJSON : String -> Cmd msg
+
+
+type alias Model =
+    { current : Int
+    , history : List Int
+    , graph : Array GraphEntry
+    , screenSize : ScreenSize
+    , rndSeed : Random.Seed
+    , scalePreset : Scale
+    , playing : Bool
+    , index : ( Int, List Int )
+    , showControls : Bool
+    , currentVoice : Int
+    , offset : String -- space between the three voices
+    , jsonError : Maybe String
+    }
+
+
+type Msg
+    = ChangedInput Int String
+    | Tick Posix
+    | SilentTick
+    | SelectedOctave Int String
+    | SelectedPitch Int String
+    | TriggerRandomNote Int
+    | SetNote Int Note
+    | CopyJSON
+    | RandomizeAll
+    | RandomizeOpts
+    | SetScale String
+    | Start
+    | Stop
+    | ToggleControls
+    | SetOffset String
+
+
+
+-- MAIN
+
+
+type alias Flags =
+    { width : Int
+    , height : Int
+    , seed : Int
+    , json : String
+    }
+
+
+main : Program Flags Model Msg
+main =
+    Browser.document { init = init, update = update, view = view, subscriptions = subscriptions }
 
 
 blockSize =
@@ -44,7 +105,7 @@ type PitchClass
 
 allPitchClasses : List PitchClass
 allPitchClasses =
-    [ C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B ]
+    [ C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B, C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B ]
 
 
 majorScale : List PitchClass
@@ -54,7 +115,7 @@ majorScale =
 
 pentaTonic : List PitchClass
 pentaTonic =
-    [ C, D, F, G, A, C, D, F, G, A ]
+    [ C, D, F, G, A, C, D, F, G, A, C, D, F, G, A ]
 
 
 toInt : PitchClass -> Int
@@ -311,15 +372,6 @@ selectOctave toMsg currentOct =
     Html.select [ Events.onInput toMsg ] options
 
 
-
--- MAIN
-
-
-main : Program ( Int, Int, Int ) Model Msg
-main =
-    Browser.document { init = init, update = update, view = view, subscriptions = subscriptions }
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
@@ -392,26 +444,95 @@ type alias Scale =
     String
 
 
-type alias Model =
-    { current : Int
-    , history : List Int
-    , graph : Array GraphEntry
-    , screenSize : ScreenSize
-    , rndSeed : Random.Seed
-    , scalePreset : Scale
-    , playing : Bool
-    , index : ( Int, List Int )
-    , showControls : Bool
-    , currentVoice : Int
-    }
+encodeScreensize : ScreenSize -> JE.Value
+encodeScreensize scrSize =
+    JE.object [ ( "width", JE.int scrSize.width ), ( "height", JE.int scrSize.height ) ]
+
+
+decodeScreensize : Decoder ScreenSize
+decodeScreensize =
+    JD.map2 ScreenSize
+        (JD.field "width" JD.int)
+        (JD.field "height" JD.int)
+
+
+encodeRandomSeed : Random.Seed -> JE.Value
+encodeRandomSeed seed =
+    let
+        ( x, _ ) =
+            Random.step (Random.int 0 Random.maxInt) seed
+    in
+    JE.int x
+
+
+decodeRandomSeed : Decoder Random.Seed
+decodeRandomSeed =
+    JD.int |> JD.map Random.initialSeed
+
+
+encodeIndex : ( Int, List Int ) -> JE.Value
+encodeIndex ( first, rest ) =
+    JE.object
+        [ ( "first", JE.int first )
+        , ( "rest", JE.list JE.int rest )
+        ]
+
+
+decodeIndex : Decoder ( Int, List Int )
+decodeIndex =
+    JD.map2 Tuple.pair
+        (JD.field "first" JD.int)
+        (JD.field "reset" (JD.list JD.int))
 
 
 encodeModel : Model -> JE.Value
 encodeModel model =
     JE.object
         [ ( "current", JE.int model.current )
+        , ( "history", JE.list JE.int model.history )
         , ( "graph", JE.array encodeGraphEntry model.graph )
+        , ( "screenSize", encodeScreensize model.screenSize )
+        , ( "rndSeed", encodeRandomSeed model.rndSeed )
+        , ( "scalePreset", JE.string model.scalePreset )
+        , ( "playing", JE.bool model.playing )
+        , ( "index", encodeIndex model.index )
+        , ( "showControls", JE.bool model.showControls )
+        , ( "currentVoice", JE.int model.currentVoice )
+        , ( "offset", JE.string model.offset )
         ]
+
+
+mkModel : Int -> List Int -> Array.Array GraphEntry -> ScreenSize -> Random.Seed -> String -> Bool -> ( Int, List Int ) -> Bool -> Int -> String -> Model
+mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset =
+    { current = current
+    , history = history
+    , graph = graph
+    , screenSize = screenSize
+    , rndSeed = rndSeed
+    , scalePreset = scalePreset
+    , playing = playing
+    , index = index
+    , showControls = showControls
+    , currentVoice = currentVoice
+    , offset = offset
+    , jsonError = Nothing
+    }
+
+
+decodeModel : Decoder Model
+decodeModel =
+    JD.succeed mkModel
+        |> required "current" JD.int
+        |> required "history" (JD.list JD.int)
+        |> required "graph" (JD.array decodeGraphEntry)
+        |> required "screenSize" decodeScreensize
+        |> required "rndSeed" decodeRandomSeed
+        |> required "scalePreset" JD.string
+        |> required "playing" JD.bool
+        |> required "index" decodeIndex
+        |> required "showControls" JD.bool
+        |> required "currentVoice" JD.int
+        |> required "offset" JD.string
 
 
 initGraph : Array GraphEntry
@@ -427,45 +548,40 @@ initGraph =
     Array.initialize graphSize fromIndex
 
 
-init : ( Int, Int, Int ) -> ( Model, Cmd Msg )
-init ( w, h, seed ) =
-    ( { current = 0
-      , graph = initGraph
-      , history = []
-      , screenSize = { width = w, height = h }
-      , rndSeed = Random.initialSeed seed
-      , scalePreset = "pentatonic"
-      , playing = True
-      , index = ( 0, [ 4, 8 ] )
-      , showControls = False
-      , currentVoice = 0
-      }
-        |> randomizeOpts
-        |> randomizeAllNotes
-        |> generateAll
-    , Cmd.none
-    )
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    let
+        default =
+            ( { current = 0
+              , graph = initGraph
+              , history = []
+              , screenSize = { width = flags.width, height = flags.height }
+              , rndSeed = Random.initialSeed flags.seed
+              , scalePreset = "pentatonic"
+              , playing = True
+              , index = ( 0, [ 4, 8 ] )
+              , showControls = False
+              , currentVoice = 0
+              , offset = "4"
+              , jsonError = Nothing
+              }
+                |> randomizeOpts
+                |> randomizeAllNotes
+                |> generateAll
+            , Cmd.none
+            )
+    in
+    case flags.json of
+        "" ->
+            default
 
+        data ->
+            case JD.decodeString decodeModel data of
+                Ok model ->
+                    ( model, Cmd.none )
 
-
--- UPDATE
-
-
-type Msg
-    = ChangedInput Int String
-    | Tick Posix
-    | SilentTick
-    | SelectedOctave Int String
-    | SelectedPitch Int String
-    | TriggerRandomNote Int
-    | SetNote Int Note
-    | CopyJSON
-    | RandomizeAll
-    | RandomizeOpts
-    | SetScale String
-    | Start
-    | Stop
-    | ToggleControls
+                Err err ->
+                    default |> (\( model, c ) -> ( { model | jsonError = Just "sorry no json" }, c ))
 
 
 generateAll : Model -> Model
@@ -577,6 +693,21 @@ update msg model =
 
         ToggleControls ->
             ( { model | showControls = not model.showControls }, Cmd.none )
+
+        SetOffset inputStr ->
+            ( setOffset inputStr model, Cmd.none )
+
+
+setOffset : String -> Model -> Model
+setOffset input model =
+    let
+        off =
+            input |> String.toInt |> Maybe.withDefault 0
+    in
+    { model
+        | index = ( 0, [ 0 + off, 0 + (2 * off) ] )
+        , offset = input
+    }
 
 
 setScale : String -> Model -> Model
@@ -971,6 +1102,20 @@ showIf show =
         [ Attr.style "display" "none" ]
 
 
+editOffset : String -> Html Msg
+editOffset off =
+    Html.label []
+        [ Html.input
+            [ Attr.type_ "number"
+            , Attr.min "0"
+            , Attr.max "100"
+            , Attr.value off
+            , Events.onInput SetOffset
+            ]
+            []
+        , Html.text "setoffset"
+        ]
+
 
 view : Model -> Browser.Document Msg
 view model =
@@ -1007,11 +1152,12 @@ view model =
                 :: showIf model.showControls
             )
             [ Html.ul [ Attr.class " " ] <| entries
-            , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy state to clipboard" ]
+            , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy preset to clipboard" ]
             , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
             , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
             , playButton model
             , selectScale model.scalePreset
+            , editOffset model.offset
             ]
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
