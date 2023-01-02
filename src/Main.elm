@@ -1128,11 +1128,23 @@ newline =
     Html.br [] []
 
 
+getCurrentSlotForVoiceZero : Model -> Int
+getCurrentSlotForVoiceZero model =
+    let
+        idx =
+            model.index |> Tuple.first
+
+        arr =
+            model.history |> Array.fromList
+    in
+    Array.get idx arr |> Maybe.withDefault -1
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap (viewEntry model.current) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
+            Array.indexedMap (viewEntry (getCurrentSlotForVoiceZero model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "graph tones"
     , body =

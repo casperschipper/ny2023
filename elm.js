@@ -7481,6 +7481,14 @@ var $author$project$Main$editOffset = function (off) {
 				$elm$html$Html$text('setoffset')
 			]));
 };
+var $author$project$Main$getCurrentSlotForVoiceZero = function (model) {
+	var idx = model.index.a;
+	var arr = $elm$core$Array$fromList(model.history);
+	return A2(
+		$elm$core$Maybe$withDefault,
+		-1,
+		A2($elm$core$Array$get, idx, arr));
+};
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$i = _VirtualDom_node('i');
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
@@ -7803,7 +7811,8 @@ var $author$project$Main$view = function (model) {
 			},
 			A2(
 				$elm$core$Array$indexedMap,
-				$author$project$Main$viewEntry(model.current),
+				$author$project$Main$viewEntry(
+					$author$project$Main$getCurrentSlotForVoiceZero(model)),
 				model.graph)));
 	return {
 		body: _List_fromArray(
