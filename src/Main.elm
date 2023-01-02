@@ -560,7 +560,7 @@ init flags =
               , scalePreset = "pentatonic"
               , playing = True
               , index = ( 0, [ 4, 8 ] )
-              , showControls = True
+              , showControls = False
               , currentVoice = 0
               , offset = "4"
               , jsonError = Nothing
@@ -905,10 +905,6 @@ selectedOctave idx octStr model =
             { model | graph = Array.set idx (GraphEntry { g | note = withOctave oct g.note }) model.graph }
 
         ( _, _ ) ->
-            let
-                _ =
-                    Debug.log "cannot find the note"
-            in
             model
 
 
@@ -1146,7 +1142,7 @@ view model =
         entries =
             Array.indexedMap (viewEntry (getCurrentSlotForVoiceZero model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
-    { title = "graph tones"
+    { title = "happy 2023! - gelukkig 2023!"
     , body =
         [ showHideControlsButton model.showControls
 
