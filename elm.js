@@ -6109,7 +6109,7 @@ var $author$project$Main$init = function (flags) {
 						rndSeed: $elm$random$Random$initialSeed(flags.seed),
 						scalePreset: 'pentatonic',
 						screenSize: {height: flags.height, width: flags.width},
-						showControls: false
+						showControls: true
 					}))),
 		$elm$core$Platform$Cmd$none);
 	var _v0 = flags.json;
@@ -7373,6 +7373,16 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Main$column = function (content) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('myCol')
+			]),
+		content);
+};
 var $author$project$Background$cursorBox = F5(
 	function (current, history, w, h, blockSize) {
 		var ws = $elm$core$String$fromInt(w);
@@ -7408,7 +7418,6 @@ var $author$project$Background$cursorBox = F5(
 					true)
 				]));
 	});
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$SetOffset = function (a) {
 	return {$: 'SetOffset', a: a};
 };
@@ -7472,19 +7481,8 @@ var $author$project$Main$editOffset = function (off) {
 				$elm$html$Html$text('setoffset')
 			]));
 };
-var $author$project$Main$entryAsString = function (_v0) {
-	var g = _v0.a;
-	return g.value + ('\narray: ' + A3(
-		$elm$core$Array$foldr,
-		F2(
-			function (x, acc) {
-				return _Utils_ap(
-					$elm$core$String$fromInt(x),
-					acc);
-			}),
-		'',
-		g.array));
-};
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$i = _VirtualDom_node('i');
 var $elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
 var $elm$core$Array$indexedMap = F2(
 	function (func, _v0) {
@@ -7548,6 +7546,7 @@ var $elm$core$Array$map = F2(
 			A2($elm$core$Elm$JsArray$map, helper, tree),
 			A2($elm$core$Elm$JsArray$map, func, tail));
 	});
+var $author$project$Main$newline = A2($elm$html$Html$br, _List_Nil, _List_Nil);
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -7739,9 +7738,13 @@ var $author$project$Main$selectPitch = F2(
 				]),
 			options);
 	});
-var $author$project$Main$viewEntry = F2(
-	function (idx, _v0) {
+var $author$project$Main$viewEntry = F3(
+	function (current, idx, _v0) {
 		var g = _v0.a;
+		var attrs = _Utils_eq(current, idx) ? _List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('highlight')
+			]) : _List_Nil;
 		var _v1 = function () {
 			var _v2 = g.note;
 			var o = _v2.a;
@@ -7752,11 +7755,11 @@ var $author$project$Main$viewEntry = F2(
 		var pitch = _v1.b;
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			attrs,
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					'#' + $elm$core$String$fromInt(idx)),
+					$elm$core$String$fromInt(idx)),
 					A2(
 					$author$project$Main$selectOctave,
 					$author$project$Main$SelectedOctave(idx),
@@ -7798,14 +7801,10 @@ var $author$project$Main$view = function (model) {
 					_List_fromArray(
 						[item]));
 			},
-			A2($elm$core$Array$indexedMap, $author$project$Main$viewEntry, model.graph)));
-	var currentEntry = A2(
-		$elm$core$Maybe$withDefault,
-		'No value',
-		A2(
-			$elm$core$Maybe$map,
-			$author$project$Main$entryAsString,
-			A2($elm$core$Array$get, model.current, model.graph)));
+			A2(
+				$elm$core$Array$indexedMap,
+				$author$project$Main$viewEntry(model.current),
+				model.graph)));
 	return {
 		body: _List_fromArray(
 			[
@@ -7852,62 +7851,100 @@ var $author$project$Main$view = function (model) {
 					$author$project$Main$showIf(model.showControls)),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Set note, and the possible next slots (from which a random slot is picked)'),
-						A2(
-						$elm$html$Html$ul,
+						$author$project$Main$column(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class(' ')
-							]),
-						entries),
-						A2(
-						$elm$html$Html$ul,
-						_List_Nil,
-						A2(
-							$elm$core$List$map,
-							function (item) {
-								return A2(
-									$elm$html$Html$li,
-									_List_Nil,
-									_List_fromArray(
-										[item]));
-							},
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('copy preset to clipboard')
-										])),
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('randomize all notes')
-										])),
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('randomize options')
-										])),
-									$author$project$Main$playButton(model),
-									$author$project$Main$selectScale(model.scalePreset),
-									$author$project$Main$editOffset(model.offset)
-								])))
+								A2(
+								$elm$html$Html$h1,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Pitches and pattern')
+									])),
+								A2(
+								$elm$html$Html$ul,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class(' ')
+									]),
+								entries)
+							])),
+						$author$project$Main$column(
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h1,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Extra options:')
+									])),
+								$elm$html$Html$text('Start/stop:'),
+								$author$project$Main$playButton(model),
+								$author$project$Main$newline,
+								$author$project$Main$selectScale(model.scalePreset),
+								$author$project$Main$newline,
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$label,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Randomize all notes based on current scale'),
+										$author$project$Main$newline,
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('randomize all notes')
+											]))
+									])),
+								$author$project$Main$newline,
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$label,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Randomize the pattern of next slots'),
+										$author$project$Main$newline,
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('randomize options')
+											]))
+									])),
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('copy preset to clipboard')
+									])),
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$i,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('(reload the page to paste a preset)')
+									])),
+								$author$project$Main$newline,
+								$author$project$Main$editOffset(model.offset)
+							]))
 					]))
 			]),
 		title: 'graph tones'

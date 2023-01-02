@@ -1,5 +1,14 @@
+.highlight {
+    background-color: #badda5;
+}
+
 .controls {
-    background-color: white;
+    background-color: rgba(255,255,255,0.5);
+    display:flex;
+}
+
+.myCol {
+    width:500px;
 }
 
 
@@ -14,7 +23,7 @@
 
 ul {
     list-style-type: none;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 
@@ -22,7 +31,7 @@ button {
     display: inline-block;
     border: none;
     padding: 0.5em 0.5em;
-    margin: 0.2em;
+    margin: 0.5em;
     text-decoration: none;
     background: #0069ed;
     color: #ffffff;

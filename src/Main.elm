@@ -560,7 +560,7 @@ init flags =
               , scalePreset = "pentatonic"
               , playing = True
               , index = ( 0, [ 4, 8 ] )
-              , showControls = False
+              , showControls = True
               , currentVoice = 0
               , offset = "4"
               , jsonError = Nothing
@@ -1031,16 +1031,23 @@ handleChangedInput idx str model =
     { model | graph = Array.set idx entry model.graph }
 
 
-viewEntry : Int -> GraphEntry -> Html Msg
-viewEntry idx (GraphEntry g) =
+viewEntry : Int -> Int -> GraphEntry -> Html Msg
+viewEntry current idx (GraphEntry g) =
     let
         ( octave, pitch ) =
             case g.note of
                 Note o p ->
                     ( o, p )
+
+        attrs =
+            if current == idx then
+                [ Attr.class "highlight" ]
+
+            else
+                []
     in
-    Html.div []
-        [ Html.text ("#" ++ String.fromInt idx)
+    Html.div attrs
+        [ Html.text (String.fromInt idx)
         , selectOctave (SelectedOctave idx) octave
         , selectPitch (SelectedPitch idx) pitch
         , Html.button [ Events.onClick (TriggerRandomNote idx) ] [ Html.text "RND!" ]
@@ -1117,14 +1124,15 @@ editOffset off =
         ]
 
 
+newline =
+    Html.br [] []
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap viewEntry model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
-
-        currentEntry =
-            Array.get model.current model.graph |> Maybe.map entryAsString |> Maybe.withDefault "No value"
+            Array.indexedMap (viewEntry model.current) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "graph tones"
     , body =
@@ -1151,18 +1159,44 @@ view model =
             (Attr.class "controls"
                 :: showIf model.showControls
             )
-            [ Html.text "Set note, and the possible next slots (from which a random slot is picked)" 
-            , Html.ul [ Attr.class " " ] <| entries
-            , Html.ul [] <|
-                (List.map (\item -> Html.li [] [item]) [
-                    Html.button [ Events.onClick CopyJSON ] [ Html.text "copy preset to clipboard" ]
-            , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
-            , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
-            , playButton model
-            , selectScale model.scalePreset
-            , editOffset model.offset])
+            [ column
+                [ Html.h1 [] [ Html.text "Pitches and pattern" ]
+                , Html.ul [ Attr.class " " ] <| entries
+                ]
+            , column
+                [ Html.h1 [] [ Html.text "Extra options:" ]
+                , Html.text "Start/stop:"
+                , playButton model
+                , newline
+                , selectScale model.scalePreset
+                , newline
+                , newline
+                , Html.label []
+                    [ Html.text "Randomize all notes based on current scale"
+                    , newline
+                    , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
+                    ]
+                , newline
+                , newline
+                , Html.label []
+                    [ Html.text "Randomize the pattern of next slots"
+                    , newline
+                    , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
+                    ]
+                , newline
+                , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy preset to clipboard" ]
+                , newline
+                , Html.i [] [ Html.text "(reload the page to paste a preset)" ]
+                , newline
+                , editOffset model.offset
+                ]
             ]
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")
         ]
     }
+
+
+column : List (Html Msg) -> Html Msg
+column content =
+    Html.div [ Attr.class "myCol" ] content
