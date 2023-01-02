@@ -800,7 +800,7 @@ randomizeOpts model =
             List.range 0 maxIndex
                 |> traverse
                     (\idx ->
-                        randomChoice 0 [ 0, 1, 1, 2, 4 ]
+                        randomChoice 0 [ 0, 1, 1, 1, 2, 4 ]
                             |> Random.andThen (fromChoice idx)
                             |> Random.map (\opts -> setOptions idx opts)
                     )
@@ -1151,13 +1151,16 @@ view model =
             (Attr.class "controls"
                 :: showIf model.showControls
             )
-            [ Html.ul [ Attr.class " " ] <| entries
-            , Html.button [ Events.onClick CopyJSON ] [ Html.text "copy preset to clipboard" ]
+            [ Html.text "Set note, and the possible next slots (from which a random slot is picked)" 
+            , Html.ul [ Attr.class " " ] <| entries
+            , Html.ul [] <|
+                (List.map (\item -> Html.li [] [item]) [
+                    Html.button [ Events.onClick CopyJSON ] [ Html.text "copy preset to clipboard" ]
             , Html.button [ Events.onClick RandomizeAll ] [ Html.text "randomize all notes" ]
             , Html.button [ Events.onClick RandomizeOpts ] [ Html.text "randomize options" ]
             , playButton model
             , selectScale model.scalePreset
-            , editOffset model.offset
+            , editOffset model.offset])
             ]
 
         --, Html.text <| (model.history |> List.map String.fromInt |> String.join " ")

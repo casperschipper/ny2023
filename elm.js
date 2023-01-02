@@ -6078,7 +6078,7 @@ var $author$project$Main$randomizeOpts = function (model) {
 						$author$project$Main$randomChoice,
 						0,
 						_List_fromArray(
-							[0, 1, 1, 2, 4]))));
+							[0, 1, 1, 1, 2, 4]))));
 		},
 		A2($elm$core$List$range, 0, maxIndex));
 	var _v0 = A2($elm$random$Random$step, generator, model.rndSeed);
@@ -7852,6 +7852,7 @@ var $author$project$Main$view = function (model) {
 					$author$project$Main$showIf(model.showControls)),
 				_List_fromArray(
 					[
+						$elm$html$Html$text('Set note, and the possible next slots (from which a random slot is picked)'),
 						A2(
 						$elm$html$Html$ul,
 						_List_fromArray(
@@ -7860,38 +7861,53 @@ var $author$project$Main$view = function (model) {
 							]),
 						entries),
 						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('copy preset to clipboard')
-							])),
+						$elm$html$Html$ul,
+						_List_Nil,
 						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('randomize all notes')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('randomize options')
-							])),
-						$author$project$Main$playButton(model),
-						$author$project$Main$selectScale(model.scalePreset),
-						$author$project$Main$editOffset(model.offset)
+							$elm$core$List$map,
+							function (item) {
+								return A2(
+									$elm$html$Html$li,
+									_List_Nil,
+									_List_fromArray(
+										[item]));
+							},
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick($author$project$Main$CopyJSON)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('copy preset to clipboard')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick($author$project$Main$RandomizeAll)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('randomize all notes')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick($author$project$Main$RandomizeOpts)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('randomize options')
+										])),
+									$author$project$Main$playButton(model),
+									$author$project$Main$selectScale(model.scalePreset),
+									$author$project$Main$editOffset(model.offset)
+								])))
 					]))
 			]),
 		title: 'graph tones'
