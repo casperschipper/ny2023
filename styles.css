@@ -2,9 +2,31 @@
     margin: 0 0.5em;
 }
 
+.slot-number {
+    margin: 0 0.5em;
+    font-weight:bold;
+    background-color:black;
+    color:white;
+    padding: 0.1em;
+}
 
-.highlight {
-    background-color: #badda5;
+
+.highlight-voice-1 {
+    box-sizing: border-box;
+    border: 2px solid;
+    border-color: red;
+}
+
+.highlight-voice-0 {
+    box-sizing: border-box;
+    border: 2px solid;
+    border-color: blue;
+}
+
+.highlight-voice-2 {
+    box-sizing: border-box;
+    border: 2px solid;
+    border-color:  green;
 }
 
 .voice-1 {
@@ -28,6 +50,21 @@
     width:500px;
 }
 
+@media screen and (max-width:768px) {
+    .controls {
+        flex-wrap:wrap;
+    }
+
+    .myCol {
+        width:100%;
+    }
+
+    select, button, input {
+        margin:0 0.25em;
+    }
+    
+}
+
 
 .half-transparant {
     opacity:0.2;
@@ -41,17 +78,22 @@
 ul {
     list-style-type: none;
     background-color: rgba(255, 255, 255, 0.3);
+    padding-left:0;
+}
+
+li {
+     min-height: 53px;
 }
 
 label {
-    margin: 1em em;
+    margin: 1em 0.5em;
 }
 
 button {
     display: inline-block;
     border: none;
     padding: 0.5em 0.5em;
-    margin: 0.5em;
+    margin: 1.0em;
     text-decoration: none;
     background: #0069ed;
     color: #ffffff;
@@ -65,6 +107,8 @@ button {
     -moz-appearance: none;
     border-radius: 5px;
 }
+
+
 
 button:hover,
 button:focus {

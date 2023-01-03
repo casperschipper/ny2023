@@ -1037,19 +1037,19 @@ handleChangedInput idx str model =
 
 viewOptsAsColors : Array Int -> Html Msg
 viewOptsAsColors opts =
-    Html.div [Attr.style "display" "inline-block"]
+    Html.div [ Attr.style "display" "inline-block" ]
         (opts
             |> Array.map
                 (\opt ->
                     Html.span [ Attr.class "colorblock", Attr.style "background-color" (Background.colorOfInt 16 opt) ]
-                        [ Html.text " " ]
+                        [ Html.text "\u{00A0}" ]
                 )
             |> Array.toList
         )
 
 
-viewEntry : Int -> Int -> GraphEntry -> Html Msg
-viewEntry current idx (GraphEntry g) =
+viewEntry : Int -> Int -> Int -> GraphEntry -> Html Msg
+viewEntry currentVoice current idx (GraphEntry g) =
     let
         ( octave, pitch ) =
             case g.note of
@@ -1058,13 +1058,13 @@ viewEntry current idx (GraphEntry g) =
 
         attrs =
             if current == idx then
-                [ Attr.class "highlight" ]
+                [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx]
 
             else
                 [ Attr.style "background-color" <| Background.colorOfInt 16 idx ]
     in
     Html.div attrs
-        [ Html.text (String.fromInt idx)
+        [ Html.span [ Attr.class "slot-number" ] [ Html.text (String.fromInt idx) ]
         , selectOctave (SelectedOctave idx) octave
         , selectPitch (SelectedPitch idx) pitch
         , Html.button [ Events.onClick (TriggerRandomNote idx) ] [ Html.text "RND!" ]
@@ -1176,7 +1176,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap (viewEntry (getCurrentSlotForVoice model.currentVoice model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
+            Array.indexedMap (viewEntry model.currentVoice (getCurrentSlotForVoice model.currentVoice model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "happy 2023! - gelukkig 2023!"
     , body =
@@ -1204,7 +1204,7 @@ view model =
                 :: showIf model.showControls
             )
             [ column
-                [ Html.h1 [] [ Html.text "Pitches and pattern" ]
+                [ Html.h1 [] [ Html.text "Pitches and pattern:" ]
                 , Html.ul [ Attr.class " " ] <| entries
                 ]
             , column

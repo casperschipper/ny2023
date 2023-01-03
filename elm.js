@@ -5317,7 +5317,7 @@ var $author$project$Main$decodeGraphEntry = A4(
 	$elm$json$Json$Decode$map3,
 	F3(
 		function (arr, v, n) {
-			return {q: arr, f: n, B: v};
+			return {r: arr, f: n, B: v};
 		}),
 	A2(
 		$elm$json$Json$Decode$field,
@@ -5378,7 +5378,7 @@ var $author$project$Main$mkModel = function (current) {
 								return function (showControls) {
 									return function (currentVoice) {
 										return function (offset) {
-											return {C: current, r: currentVoice, a: graph, l: history, h: index, S: $elm$core$Maybe$Nothing, J: offset, x: playing, o: rndSeed, G: scalePreset, p: screenSize, z: showControls};
+											return {C: current, m: currentVoice, a: graph, l: history, h: index, S: $elm$core$Maybe$Nothing, J: offset, x: playing, p: rndSeed, G: scalePreset, q: screenSize, z: showControls};
 										};
 									};
 								};
@@ -5790,8 +5790,8 @@ var $author$project$Main$handleTick = function (model) {
 		var g = mOptions.a;
 		var _v1 = A2(
 			$elm$random$Random$step,
-			$author$project$Main$generateNext(g.q),
-			model.o);
+			$author$project$Main$generateNext(g.r),
+			model.p);
 		var next = _v1.a;
 		var nxtSeed = _v1.b;
 		return _Utils_update(
@@ -5804,7 +5804,7 @@ var $author$project$Main$handleTick = function (model) {
 					$elm$core$Array$fromList(
 						_List_fromArray(
 							[next]))),
-				o: nxtSeed
+				p: nxtSeed
 			});
 	}
 };
@@ -5845,7 +5845,7 @@ var $author$project$Main$sequenceUpdates = F2(
 			lst);
 	});
 var $author$project$Main$generateAll = function (model) {
-	var num = A3($author$project$Background$numOfBlocks, model.p.u, model.p.s, $author$project$Main$blockSize);
+	var num = A3($author$project$Background$numOfBlocks, model.q.u, model.q.s, $author$project$Main$blockSize);
 	return A2(
 		$author$project$Main$sequenceUpdates,
 		A2($elm$core$List$repeat, num, $author$project$Main$handleTick),
@@ -5859,7 +5859,7 @@ var $author$project$Main$initGraph = function () {
 	var fromIndex = function (idx) {
 		var nextSlot = A2($elm$core$Basics$modBy, $author$project$Main$graphSize, idx + 1);
 		return {
-			q: $elm$core$Array$fromList(
+			r: $elm$core$Array$fromList(
 				_List_fromArray(
 					[nextSlot])),
 			f: A2($author$project$Main$Note, 3, 0),
@@ -6036,14 +6036,14 @@ var $author$project$Main$randomizeAllNotes = function (model) {
 			$elm$random$Random$list,
 			$elm$core$List$length(entryLst),
 			$author$project$Main$randomNoteOfClass(model.G)),
-		model.o);
+		model.p);
 	var randomNotes = _v0.a;
 	var newSeed = _v0.b;
 	var newGraph = $elm$core$Array$fromList(
 		A3($elm$core$List$map2, updateNotes, entryLst, randomNotes));
 	return _Utils_update(
 		model,
-		{a: newGraph, o: newSeed});
+		{a: newGraph, p: newSeed});
 };
 var $elm$random$Random$andThen = F2(
 	function (callback, _v0) {
@@ -6177,7 +6177,7 @@ var $author$project$Main$setOptions = F3(
 				_Utils_update(
 					g,
 					{
-						q: opts,
+						r: opts,
 						B: $author$project$Main$intArrayToString(opts)
 					}),
 				model.a);
@@ -6239,13 +6239,13 @@ var $author$project$Main$randomizeOpts = function (model) {
 							[0, 1, 1, 2, 2, 5]))));
 		},
 		A2($elm$core$List$range, 0, maxIndex));
-	var _v0 = A2($elm$random$Random$step, generator, model.o);
+	var _v0 = A2($elm$random$Random$step, generator, model.p);
 	var updates = _v0.a;
 	var newSeed = _v0.b;
 	var newModel = A2($author$project$Main$sequenceUpdates, updates, model);
 	return _Utils_update(
 		newModel,
-		{o: newSeed});
+		{p: newSeed});
 };
 var $author$project$Main$init = function (flags) {
 	var _default = _Utils_Tuple2(
@@ -6254,7 +6254,7 @@ var $author$project$Main$init = function (flags) {
 				$author$project$Main$randomizeOpts(
 					{
 						C: 0,
-						r: 0,
+						m: 0,
 						a: $author$project$Main$initGraph,
 						l: $elm$core$Array$empty,
 						h: _Utils_Tuple2(
@@ -6264,9 +6264,9 @@ var $author$project$Main$init = function (flags) {
 						S: $elm$core$Maybe$Nothing,
 						J: '6',
 						x: true,
-						o: $elm$random$Random$initialSeed(flags.X),
+						p: $elm$random$Random$initialSeed(flags.X),
 						G: 'pentatonic',
-						p: {s: flags.s, u: flags.u},
+						q: {s: flags.s, u: flags.u},
 						z: true
 					}))),
 		$elm$core$Platform$Cmd$none);
@@ -6796,7 +6796,7 @@ var $author$project$Main$handleChangedInput = F3(
 				$elm$core$String$toInt,
 				A2($elm$core$String$split, ' ', str)));
 		var entry = {
-			q: $elm$core$Array$fromList(parseInts),
+			r: $elm$core$Array$fromList(parseInts),
 			f: A2(
 				$elm$core$Maybe$withDefault,
 				A2($author$project$Main$Note, 3, 0),
@@ -6909,7 +6909,7 @@ var $author$project$Main$encodeGraphEntry = function (_v0) {
 			[
 				_Utils_Tuple2(
 				'array',
-				A2($elm$json$Json$Encode$array, $elm$json$Json$Encode$int, g.q)),
+				A2($elm$json$Json$Encode$array, $elm$json$Json$Encode$int, g.r)),
 				_Utils_Tuple2(
 				'value',
 				$elm$json$Json$Encode$string(g.B)),
@@ -6977,10 +6977,10 @@ var $author$project$Main$encodeModel = function (model) {
 				A2($elm$json$Json$Encode$array, $author$project$Main$encodeGraphEntry, model.a)),
 				_Utils_Tuple2(
 				'screenSize',
-				$author$project$Main$encodeScreensize(model.p)),
+				$author$project$Main$encodeScreensize(model.q)),
 				_Utils_Tuple2(
 				'rndSeed',
-				$author$project$Main$encodeRandomSeed(model.o)),
+				$author$project$Main$encodeRandomSeed(model.p)),
 				_Utils_Tuple2(
 				'scalePreset',
 				$elm$json$Json$Encode$string(model.G)),
@@ -6995,7 +6995,7 @@ var $author$project$Main$encodeModel = function (model) {
 				$elm$json$Json$Encode$bool(model.z)),
 				_Utils_Tuple2(
 				'currentVoice',
-				$elm$json$Json$Encode$int(model.r)),
+				$elm$json$Json$Encode$int(model.m)),
 				_Utils_Tuple2(
 				'offset',
 				$elm$json$Json$Encode$string(model.J))
@@ -7009,7 +7009,7 @@ var $author$project$Main$modelAsJSON = function (model) {
 };
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$getCurrentVoiceIndex = function (model) {
-	var _v0 = _Utils_Tuple2(model.h, model.r);
+	var _v0 = _Utils_Tuple2(model.h, model.m);
 	if (!_v0.a.b.b) {
 		var _v1 = _v0.a;
 		var idx = _v1.a;
@@ -7220,7 +7220,7 @@ var $author$project$Main$setScale = F2(
 			nPitches,
 			$elm$core$Array$length(model.a)) > 0) ? 0 : (nPitches - $elm$core$Array$length(model.a));
 		var graphEntry = {
-			q: $elm$core$Array$fromList(
+			r: $elm$core$Array$fromList(
 				_List_fromArray(
 					[0])),
 			f: A2($author$project$Main$Note, 3, 0),
@@ -7247,7 +7247,7 @@ var $author$project$Main$setCurrentVoiceIndex = F2(
 		} else {
 			var idx = _v0.a;
 			var rest = _v0.b;
-			var _v1 = model.r;
+			var _v1 = model.m;
 			if (!_v1) {
 				return _Utils_Tuple2(newx, rest);
 			} else {
@@ -7278,11 +7278,11 @@ var $author$project$Main$timeTick = function (model) {
 		return (_Utils_cmp(
 			x,
 			$elm$core$List$length(model.h.b) + 1) > 0) ? 0 : x;
-	}(model.r + 1);
+	}(model.m + 1);
 	return _Utils_update(
 		model,
 		{
-			r: newCurrentVoice,
+			m: newCurrentVoice,
 			h: A2($author$project$Main$setCurrentVoiceIndex, safeIndex, model)
 		});
 };
@@ -7929,17 +7929,22 @@ var $author$project$Main$viewOptsAsColors = function (opts) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(' ')
+								$elm$html$Html$text('\u00A0')
 							]));
 				},
 				opts)));
 };
-var $author$project$Main$viewEntry = F3(
-	function (current, idx, _v0) {
+var $author$project$Main$viewEntry = F4(
+	function (currentVoice, current, idx, _v0) {
 		var g = _v0;
 		var attrs = _Utils_eq(current, idx) ? _List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('highlight')
+				$elm$html$Html$Attributes$class(
+				'highlight-voice-' + $elm$core$String$fromInt(currentVoice)),
+				A2(
+				$elm$html$Html$Attributes$style,
+				'background-color',
+				A2($author$project$Background$colorOfInt, 16, idx))
 			]) : _List_fromArray(
 			[
 				A2(
@@ -7960,8 +7965,17 @@ var $author$project$Main$viewEntry = F3(
 			attrs,
 			_List_fromArray(
 				[
-					$elm$html$Html$text(
-					$elm$core$String$fromInt(idx)),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('slot-number')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(idx))
+						])),
 					A2(
 					$author$project$Main$selectOctave,
 					$author$project$Main$SelectedOctave(idx),
@@ -7990,7 +8004,7 @@ var $author$project$Main$viewEntry = F3(
 							$elm$html$Html$Attributes$value(g.B)
 						]),
 					_List_Nil),
-					$author$project$Main$viewOptsAsColors(g.q)
+					$author$project$Main$viewOptsAsColors(g.r)
 				]));
 	});
 var $author$project$Main$view = function (model) {
@@ -8006,8 +8020,10 @@ var $author$project$Main$view = function (model) {
 			},
 			A2(
 				$elm$core$Array$indexedMap,
-				$author$project$Main$viewEntry(
-					A2($author$project$Main$getCurrentSlotForVoice, model.r, model)),
+				A2(
+					$author$project$Main$viewEntry,
+					model.m,
+					A2($author$project$Main$getCurrentSlotForVoice, model.m, model)),
 				model.a)));
 	return {
 		aA: _List_fromArray(
@@ -8025,7 +8041,7 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A4($author$project$Background$backgroundSvg, model.l, model.p.u, model.p.s, $author$project$Main$blockSize)
+						A4($author$project$Background$backgroundSvg, model.l, model.q.u, model.q.s, $author$project$Main$blockSize)
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -8042,8 +8058,8 @@ var $author$project$Main$view = function (model) {
 						$author$project$Background$cursorBox,
 						$author$project$Main$getCurrentVoiceIndex(model) + 1,
 						model.l,
-						model.p.u,
-						model.p.s,
+						model.q.u,
+						model.q.s,
 						$author$project$Main$blockSize)
 					])),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
@@ -8063,7 +8079,7 @@ var $author$project$Main$view = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Pitches and pattern')
+										$elm$html$Html$text('Pitches and pattern:')
 									])),
 								A2(
 								$elm$html$Html$ul,
