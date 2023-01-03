@@ -12,6 +12,7 @@ import Json.Encode as JE exposing (Value)
 import List exposing (all)
 import Random
 import Time exposing (Posix)
+import Background exposing (backgroundSvg)
 
 
 
@@ -31,7 +32,7 @@ port copyJSON : String -> Cmd msg
 
 type alias Model =
     { current : Int
-    , history : List Int
+    , history : Array Int
     , graph : Array GraphEntry
     , screenSize : ScreenSize
     , rndSeed : Random.Seed
@@ -81,7 +82,7 @@ main =
 
 
 blockSize =
-    20
+    25
 
 
 voices =
@@ -489,7 +490,7 @@ encodeModel : Model -> JE.Value
 encodeModel model =
     JE.object
         [ ( "current", JE.int model.current )
-        , ( "history", JE.list JE.int model.history )
+        , ( "history", JE.array JE.int model.history )
         , ( "graph", JE.array encodeGraphEntry model.graph )
         , ( "screenSize", encodeScreensize model.screenSize )
         , ( "rndSeed", encodeRandomSeed model.rndSeed )
@@ -502,7 +503,7 @@ encodeModel model =
         ]
 
 
-mkModel : Int -> List Int -> Array.Array GraphEntry -> ScreenSize -> Random.Seed -> String -> Bool -> ( Int, List Int ) -> Bool -> Int -> String -> Model
+mkModel : Int -> Array Int -> Array.Array GraphEntry -> ScreenSize -> Random.Seed -> String -> Bool -> ( Int, List Int ) -> Bool -> Int -> String -> Model
 mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset =
     { current = current
     , history = history
@@ -523,7 +524,7 @@ decodeModel : Decoder Model
 decodeModel =
     JD.succeed mkModel
         |> required "current" JD.int
-        |> required "history" (JD.list JD.int)
+        |> required "history" (JD.array JD.int)
         |> required "graph" (JD.array decodeGraphEntry)
         |> required "screenSize" decodeScreensize
         |> required "rndSeed" decodeRandomSeed
@@ -554,15 +555,15 @@ init flags =
         default =
             ( { current = 0
               , graph = initGraph
-              , history = []
+              , history = Array.empty
               , screenSize = { width = flags.width, height = flags.height }
               , rndSeed = Random.initialSeed flags.seed
               , scalePreset = "pentatonic"
               , playing = True
-              , index = ( 0, [ 4, 8 ] )
+              , index = ( 0, [ 6, 12 ] )
               , showControls = False
               , currentVoice = 0
-              , offset = "4"
+              , offset = "6"
               , jsonError = Nothing
               }
                 |> randomizeOpts
@@ -590,7 +591,7 @@ generateAll model =
         num =
             Background.numOfBlocks model.screenSize.width model.screenSize.height blockSize
     in
-    sequenceUpdates (List.repeat num handleTick) { model | history = [] }
+    sequenceUpdates (List.repeat num handleTick) { model | history = Array.empty }
 
 
 
@@ -793,14 +794,14 @@ randomizeOpts model =
             Array.length model.graph
 
         fromChoice idx choice =
-            Random.list choice (Random.int 0 idx)
+            Random.list choice (Random.int 0 maxIndex)
                 |> Random.map (\rlst -> (modBy maxIndex (idx + 1) :: rlst) |> Array.fromList)
 
         generator =
             List.range 0 maxIndex
                 |> traverse
                     (\idx ->
-                        randomChoice 0 [ 0, 1, 1, 1, 2, 4 ]
+                        randomChoice 0 [ 0, 1, 1, 2, 2, 5 ]
                             |> Random.andThen (fromChoice idx)
                             |> Random.map (\opts -> setOptions idx opts)
                     )
@@ -875,13 +876,9 @@ randomizeAllNotes model =
     }
 
 
-lookupSelectedNote : Int -> List Int -> Array GraphEntry -> String
+lookupSelectedNote : Int -> Array Int -> Array GraphEntry -> String
 lookupSelectedNote idx history array =
-    let
-        histArr =
-            Array.fromList history
-    in
-    Array.get idx histArr
+    Array.get idx history
         |> Maybe.andThen
             (\idx2 ->
                 Array.get idx2 array
@@ -942,7 +939,7 @@ handleTick model =
             in
             { model
                 | current = next
-                , history = next :: model.history
+                , history = Array.append model.history (Array.fromList [ next ])
                 , rndSeed = nxtSeed
             }
 
@@ -978,7 +975,7 @@ timeTick model =
             getCurrentVoiceIndex model + 1
 
         safeIndex =
-            modBy (max 1 (List.length model.history)) newIndex
+            modBy (max 1 (Array.length model.history)) newIndex
 
         newCurrentVoice =
             model.currentVoice
@@ -1026,6 +1023,18 @@ handleChangedInput idx str model =
     in
     { model | graph = Array.set idx entry model.graph }
 
+{-
+
+
+
+
+
+editOpts : Int -> Array Int -> Html Msg
+editOpts maxIdx arr =
+    List.range 0 maxIdx 
+        |> \i Html.input [] [] 
+
+-}
 
 viewEntry : Int -> Int -> GraphEntry -> Html Msg
 viewEntry current idx (GraphEntry g) =
@@ -1040,7 +1049,7 @@ viewEntry current idx (GraphEntry g) =
                 [ Attr.class "highlight" ]
 
             else
-                []
+                [Attr.style "background-color" <| Background.colorOfInt 16 idx]
     in
     Html.div attrs
         [ Html.text (String.fromInt idx)
@@ -1124,23 +1133,33 @@ newline =
     Html.br [] []
 
 
+lookupIndexInHistory : Int -> Model -> Int 
+lookupIndexInHistory idx model = 
+    Array.get (model.index |> Tuple.first) model.history |> Maybe.withDefault -1
+
 getCurrentSlotForVoiceZero : Model -> Int
 getCurrentSlotForVoiceZero model =
     let
         idx =
             model.index |> Tuple.first
-
-        arr =
-            model.history |> Array.fromList
     in
-    Array.get idx arr |> Maybe.withDefault -1
+    lookupIndexInHistory idx model
+
+getCurrentSlotForVoice : Int -> Model -> Int
+getCurrentSlotForVoice voiceNum model =
+    case voiceNum of
+        0 -> lookupIndexInHistory (Tuple.first model.index) model
+            
+        nonZero ->
+            Array.get nonZero (model.index |> Tuple.second |> Array.fromList) |> 
+            Maybe.map (\idx2 -> lookupIndexInHistory idx2 model) |> Maybe.withDefault -1
 
 
 view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap (viewEntry (getCurrentSlotForVoiceZero model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
+            Array.indexedMap (viewEntry (getCurrentSlotForVoice model.currentVoice model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "happy 2023! - gelukkig 2023!"
     , body =

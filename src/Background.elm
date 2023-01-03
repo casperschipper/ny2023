@@ -1,6 +1,6 @@
-module Background exposing (backgroundSvg, cursorBox, numOfBlocks)
+module Background exposing (backgroundSvg, cursorBox, numOfBlocks, colorOfInt)
 
-import Array
+import Array exposing (Array)
 import Html
 import Html.Lazy
 import Svg exposing (..)
@@ -53,12 +53,12 @@ numOfBlocks w h blocksize =
     (w // blocksize) * (h // blocksize)
 
 
-backgroundSvg : List Int -> Int -> Int -> Int -> Html.Html msg
+backgroundSvg : Array Int -> Int -> Int -> Int -> Html.Html msg
 backgroundSvg history w h blockSize =
     Html.Lazy.lazy4 justTheBlocks history w h blockSize
 
 
-cursorBox : Int -> List Int -> Int -> Int -> Int -> Html.Html msg
+cursorBox : Int -> Array Int -> Int -> Int -> Int -> Html.Html msg
 cursorBox current history w h blockSize =
     let
         ws =
@@ -68,13 +68,13 @@ cursorBox current history w h blockSize =
             String.fromInt h
 
         color =
-            history |> Array.fromList |> Array.get current |> Maybe.withDefault 0
+            history |> Array.get current |> Maybe.withDefault 0
     in
     svg [ width ws, height hs, viewBox <| ([ "0", "0", ws, hs ] |> String.join " ") ]
         [ mkRect w blockSize (colorOfInt 16 color) current True ]
 
 
-justTheBlocks : List Int -> Int -> Int -> Int -> Html.Html msg
+justTheBlocks : Array Int -> Int -> Int -> Int -> Html.Html msg
 justTheBlocks history w h blockSize =
     let
         ws =
@@ -89,7 +89,7 @@ justTheBlocks history w h blockSize =
         , viewBox <| ([ "0", "0", ws, hs ] |> String.join " ")
         ]
         (history
-            |> List.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i False)
+            |> Array.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i False) |> Array.toList
         )
 
 
