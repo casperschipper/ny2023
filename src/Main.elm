@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Array exposing (Array)
-import Background
+import Background exposing (backgroundSvg)
 import Browser
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -12,7 +12,6 @@ import Json.Encode as JE exposing (Value)
 import List exposing (all)
 import Random
 import Time exposing (Posix)
-import Background exposing (backgroundSvg)
 
 
 
@@ -561,7 +560,7 @@ init flags =
               , scalePreset = "pentatonic"
               , playing = True
               , index = ( 0, [ 6, 12 ] )
-              , showControls = False
+              , showControls = True
               , currentVoice = 0
               , offset = "6"
               , jsonError = Nothing
@@ -1023,18 +1022,31 @@ handleChangedInput idx str model =
     in
     { model | graph = Array.set idx entry model.graph }
 
+
+
 {-
 
+   countN
 
+   UpdateOpt Int Int
+   Count Ints
 
-
-
-editOpts : Int -> Array Int -> Html Msg
-editOpts maxIdx arr =
-    List.range 0 maxIdx 
-        |> \i Html.input [] [] 
 
 -}
+
+
+viewOptsAsColors : Array Int -> Html Msg
+viewOptsAsColors opts =
+    Html.div [Attr.style "display" "inline-block"]
+        (opts
+            |> Array.map
+                (\opt ->
+                    Html.span [ Attr.class "colorblock", Attr.style "background-color" (Background.colorOfInt 16 opt) ]
+                        [ Html.text " " ]
+                )
+            |> Array.toList
+        )
+
 
 viewEntry : Int -> Int -> GraphEntry -> Html Msg
 viewEntry current idx (GraphEntry g) =
@@ -1049,7 +1061,7 @@ viewEntry current idx (GraphEntry g) =
                 [ Attr.class "highlight" ]
 
             else
-                [Attr.style "background-color" <| Background.colorOfInt 16 idx]
+                [ Attr.style "background-color" <| Background.colorOfInt 16 idx ]
     in
     Html.div attrs
         [ Html.text (String.fromInt idx)
@@ -1057,6 +1069,7 @@ viewEntry current idx (GraphEntry g) =
         , selectPitch (SelectedPitch idx) pitch
         , Html.button [ Events.onClick (TriggerRandomNote idx) ] [ Html.text "RND!" ]
         , Html.input [ Events.onInput (ChangedInput idx), Attr.value g.value ] []
+        , viewOptsAsColors g.array
         ]
 
 
@@ -1133,9 +1146,10 @@ newline =
     Html.br [] []
 
 
-lookupIndexInHistory : Int -> Model -> Int 
-lookupIndexInHistory idx model = 
+lookupIndexInHistory : Int -> Model -> Int
+lookupIndexInHistory idx model =
     Array.get (model.index |> Tuple.first) model.history |> Maybe.withDefault -1
+
 
 getCurrentSlotForVoiceZero : Model -> Int
 getCurrentSlotForVoiceZero model =
@@ -1145,14 +1159,17 @@ getCurrentSlotForVoiceZero model =
     in
     lookupIndexInHistory idx model
 
+
 getCurrentSlotForVoice : Int -> Model -> Int
 getCurrentSlotForVoice voiceNum model =
     case voiceNum of
-        0 -> lookupIndexInHistory (Tuple.first model.index) model
-            
+        0 ->
+            lookupIndexInHistory (Tuple.first model.index) model
+
         nonZero ->
-            Array.get nonZero (model.index |> Tuple.second |> Array.fromList) |> 
-            Maybe.map (\idx2 -> lookupIndexInHistory idx2 model) |> Maybe.withDefault -1
+            Array.get nonZero (model.index |> Tuple.second |> Array.fromList)
+                |> Maybe.map (\idx2 -> lookupIndexInHistory idx2 model)
+                |> Maybe.withDefault -1
 
 
 view : Model -> Browser.Document Msg
@@ -1192,8 +1209,10 @@ view model =
                 ]
             , column
                 [ Html.h1 [] [ Html.text "Extra options:" ]
-                , Html.text "Start/stop:"
-                , playButton model
+                , Html.label []
+                    [ Html.text "Start/stop:"
+                    , playButton model
+                    ]
                 , newline
                 , selectScale model.scalePreset
                 , newline
