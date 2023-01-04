@@ -1,12 +1,29 @@
+@media screen and (max-width:768px) {
+    .controls {
+        flex-wrap: wrap;
+    }
+
+    .myCol {
+        width: 100%;
+    }
+
+    select,
+    button,
+    input {
+        margin: 0 0.25em;
+    }
+
+}
+
 .colorblock {
     margin: 0 0.5em;
 }
 
 .slot-number {
     margin: 0 0.5em;
-    font-weight:bold;
-    background-color:black;
-    color:white;
+    font-weight: bold;
+    background-color: black;
+    color: white;
     padding: 0.1em;
 }
 
@@ -20,13 +37,13 @@
 .highlight-voice-0 {
     box-sizing: border-box;
     border: 2px solid;
-    border-color: blue;
+    border-color: green;
 }
 
 .highlight-voice-2 {
     box-sizing: border-box;
     border: 2px solid;
-    border-color:  green;
+    border-color: blue;
 }
 
 .voice-1 {
@@ -42,33 +59,17 @@
 }
 
 .controls {
-    background-color: rgba(255,255,255,0.5);
-    display:flex;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
 }
 
 .myCol {
-    width:500px;
+    width: 500px;
 }
-
-@media screen and (max-width:768px) {
-    .controls {
-        flex-wrap:wrap;
-    }
-
-    .myCol {
-        width:100%;
-    }
-
-    select, button, input {
-        margin:0 0.25em;
-    }
-    
-}
-
 
 .half-transparant {
-    opacity:0.2;
-    font-size:6px;
+    opacity: 0.2;
+    font-size: 6px;
 }
 
 * {
@@ -78,11 +79,11 @@
 ul {
     list-style-type: none;
     background-color: rgba(255, 255, 255, 0.3);
-    padding-left:0;
+    padding-left: 0;
 }
 
 li {
-     min-height: 53px;
+    min-height: 53px;
 }
 
 label {
@@ -101,8 +102,8 @@ button {
     font-size: 1rem;
     cursor: pointer;
     text-align: center;
-    transition: background 250ms ease-in-out, 
-                transform 150ms ease;
+    transition: background 250ms ease-in-out,
+        transform 150ms ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     border-radius: 5px;
@@ -123,3 +124,4 @@ button:focus {
 button:active {
     transform: scale(0.99);
 }
+

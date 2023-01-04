@@ -6267,7 +6267,7 @@ var $author$project$Main$init = function (flags) {
 						p: $elm$random$Random$initialSeed(flags.X),
 						G: 'pentatonic',
 						q: {s: flags.s, u: flags.u},
-						z: true
+						z: false
 					}))),
 		$elm$core$Platform$Cmd$none);
 	var _v0 = flags.T;
@@ -7484,11 +7484,11 @@ var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $author$project$Background$mkRect = F5(
-	function (screenWidth, squareWidth, color, x, marked) {
+var $author$project$Background$mkRect = F6(
+	function (strk, screenWidth, squareWidth, color, x, marked) {
 		var border = marked ? _List_fromArray(
 			[
-				$elm$svg$Svg$Attributes$stroke('rgb(0,0,0)'),
+				$elm$svg$Svg$Attributes$stroke(strk),
 				$elm$svg$Svg$Attributes$strokeWidth('2')
 			]) : _List_Nil;
 		return A2(
@@ -7527,8 +7527,9 @@ var $author$project$Background$justTheBlocks = F4(
 					$elm$core$Array$indexedMap,
 					F2(
 						function (i, pitchIndex) {
-							return A5(
+							return A6(
 								$author$project$Background$mkRect,
+								'',
 								w,
 								blockSize,
 								A2($author$project$Background$colorOfInt, 16, pitchIndex),
@@ -7563,9 +7564,19 @@ var $author$project$Main$column = function (content) {
 			]),
 		content);
 };
-var $author$project$Background$cursorBox = F5(
-	function (current, history, w, h, blockSize) {
+var $author$project$Background$cursorBox = F6(
+	function (currentVoice, current, history, w, h, blockSize) {
 		var ws = $elm$core$String$fromInt(w);
+		var strk = function () {
+			switch (currentVoice) {
+				case 0:
+					return 'rgb(255,0,0)';
+				case 1:
+					return 'rgb(0,255,0)';
+				default:
+					return 'rgb(0,0,255)';
+			}
+		}();
 		var hs = $elm$core$String$fromInt(h);
 		var color = A2(
 			$elm$core$Maybe$withDefault,
@@ -7586,8 +7597,9 @@ var $author$project$Background$cursorBox = F5(
 				]),
 			_List_fromArray(
 				[
-					A5(
+					A6(
 					$author$project$Background$mkRect,
+					strk,
 					w,
 					blockSize,
 					A2($author$project$Background$colorOfInt, 16, color),
@@ -7799,6 +7811,7 @@ var $author$project$Main$selectScale = function (currentSel) {
 			]));
 };
 var $author$project$Main$ToggleControls = {$: 13};
+var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$showHideControlsButton = function (showControls) {
@@ -7820,8 +7833,17 @@ var $author$project$Main$showHideControlsButton = function (showControls) {
 						$elm$html$Html$Events$onClick($author$project$Main$ToggleControls)
 					]),
 				_List_Nil),
-				$elm$html$Html$text(
-				showControls ? 'close' : 'open controls')
+				A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '24px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						showControls ? 'control panel' : 'control panel')
+					]))
 			]));
 };
 var $author$project$Main$showIf = function (show) {
@@ -7905,7 +7927,6 @@ var $author$project$Main$selectPitch = F2(
 				]),
 			options);
 	});
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$viewOptsAsColors = function (opts) {
 	return A2(
 		$elm$html$Html$div,
@@ -8054,8 +8075,9 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A5(
+						A6(
 						$author$project$Background$cursorBox,
+						model.m,
 						$author$project$Main$getCurrentVoiceIndex(model) + 1,
 						model.l,
 						model.q.u,

@@ -560,7 +560,7 @@ init flags =
               , scalePreset = "pentatonic"
               , playing = True
               , index = ( 0, [ 6, 12 ] )
-              , showControls = True
+              , showControls = False
               , currentVoice = 0
               , offset = "6"
               , jsonError = Nothing
@@ -1109,12 +1109,12 @@ showHideControlsButton : Bool -> Html Msg
 showHideControlsButton showControls =
     Html.label [ Attr.style "background-color" "white", Attr.style "float" "right" ]
         [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
-        , Html.text <|
+        , Html.span [Attr.style "font-size" "24px"] [Html.text <|
             if showControls then
-                "close"
+                "control panel"
 
             else
-                "open controls"
+                "control panel"]
         ]
 
 
@@ -1197,7 +1197,7 @@ view model =
             , Attr.style "left" "0px"
             , Attr.style "z-index" "-1"
             ]
-            [ Background.cursorBox (getCurrentVoiceIndex model + 1) model.history model.screenSize.width model.screenSize.height blockSize ]
+            [ Background.cursorBox model.currentVoice (getCurrentVoiceIndex model + 1) model.history model.screenSize.width model.screenSize.height blockSize ]
         , Html.br [] []
         , Html.div
             (Attr.class "controls"

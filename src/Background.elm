@@ -1,4 +1,4 @@
-module Background exposing (backgroundSvg, cursorBox, numOfBlocks, colorOfInt)
+module Background exposing (backgroundSvg, colorOfInt, cursorBox, numOfBlocks)
 
 import Array exposing (Array)
 import Html
@@ -30,11 +30,11 @@ safeModBy y x =
             modBy y x
 
 
-mkRect screenWidth squareWidth color x marked =
+mkRect strk screenWidth squareWidth color x marked =
     let
         border =
             if marked then
-                [ stroke "rgb(0,0,0)", strokeWidth "2" ]
+                [ stroke strk, strokeWidth "2" ]
 
             else
                 []
@@ -58,8 +58,8 @@ backgroundSvg history w h blockSize =
     Html.Lazy.lazy4 justTheBlocks history w h blockSize
 
 
-cursorBox : Int -> Array Int -> Int -> Int -> Int -> Html.Html msg
-cursorBox current history w h blockSize =
+cursorBox : Int -> Int -> Array Int -> Int -> Int -> Int -> Html.Html msg
+cursorBox currentVoice current history w h blockSize =
     let
         ws =
             String.fromInt w
@@ -69,9 +69,20 @@ cursorBox current history w h blockSize =
 
         color =
             history |> Array.get current |> Maybe.withDefault 0
+
+        strk =
+            case currentVoice of
+                0 ->
+                    "rgb(255,0,0)"
+
+                1 ->
+                    "rgb(0,255,0)"
+
+                _ ->
+                    "rgb(0,0,255)"
     in
     svg [ width ws, height hs, viewBox <| ([ "0", "0", ws, hs ] |> String.join " ") ]
-        [ mkRect w blockSize (colorOfInt 16 color) current True ]
+        [ mkRect strk w blockSize (colorOfInt 16 color) current True ]
 
 
 justTheBlocks : Array Int -> Int -> Int -> Int -> Html.Html msg
@@ -89,7 +100,8 @@ justTheBlocks history w h blockSize =
         , viewBox <| ([ "0", "0", ws, hs ] |> String.join " ")
         ]
         (history
-            |> Array.indexedMap (\i pitchIndex -> mkRect w blockSize (colorOfInt 16 pitchIndex) i False) |> Array.toList
+            |> Array.indexedMap (\i pitchIndex -> mkRect "" w blockSize (colorOfInt 16 pitchIndex) i False)
+            |> Array.toList
         )
 
 
