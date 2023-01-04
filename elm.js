@@ -519,11 +519,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.aa.P === region.af.P)
+	if (region.aa.Q === region.af.Q)
 	{
-		return 'on line ' + region.aa.P;
+		return 'on line ' + region.aa.Q;
 	}
-	return 'on lines ' + region.aa.P + ' through ' + region.af.P;
+	return 'on lines ' + region.aa.Q + ' through ' + region.af.Q;
 }
 
 
@@ -5379,21 +5379,27 @@ var $author$project$Main$mkModel = function (current) {
 									return function (currentVoice) {
 										return function (offset) {
 											return function (numberOfVoice) {
-												return {
-													C: current,
-													m: currentVoice,
-													a: graph,
-													l: history,
-													g: index,
-													K: _Utils_Tuple2('125', 125),
-													U: $elm$core$Maybe$Nothing,
-													L: numberOfVoice,
-													E: offset,
-													x: playing,
-													p: rndSeed,
-													H: scalePreset,
-													q: screenSize,
-													z: showControls
+												return function (intervalMs) {
+													return {
+														C: current,
+														m: currentVoice,
+														a: graph,
+														l: history,
+														g: index,
+														E: function (i) {
+															return _Utils_Tuple2(
+																$elm$core$String$fromInt(i),
+																i);
+														}(intervalMs),
+														P: $elm$core$Maybe$Nothing,
+														L: numberOfVoice,
+														F: offset,
+														x: playing,
+														p: rndSeed,
+														I: scalePreset,
+														q: screenSize,
+														z: showControls
+													};
 												};
 											};
 										};
@@ -5417,53 +5423,57 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	});
 var $author$project$Main$decodeModel = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'numberOfVoice',
-	$elm$json$Json$Decode$string,
+	'intervalMs',
+	$elm$json$Json$Decode$int,
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'offset',
+		'numberOfVoice',
 		$elm$json$Json$Decode$string,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'currentVoice',
-			$elm$json$Json$Decode$int,
+			'offset',
+			$elm$json$Json$Decode$string,
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'showControls',
-				$elm$json$Json$Decode$bool,
+				'currentVoice',
+				$elm$json$Json$Decode$int,
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'index',
-					$author$project$Main$decodeIndex,
+					'showControls',
+					$elm$json$Json$Decode$bool,
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'playing',
-						$elm$json$Json$Decode$bool,
+						'index',
+						$author$project$Main$decodeIndex,
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'scalePreset',
-							$elm$json$Json$Decode$string,
+							'playing',
+							$elm$json$Json$Decode$bool,
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'rndSeed',
-								$author$project$Main$decodeRandomSeed,
+								'scalePreset',
+								$elm$json$Json$Decode$string,
 								A3(
 									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'screenSize',
-									$author$project$Main$decodeScreensize,
+									'rndSeed',
+									$author$project$Main$decodeRandomSeed,
 									A3(
 										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-										'graph',
-										$elm$json$Json$Decode$array($author$project$Main$decodeGraphEntry),
+										'screenSize',
+										$author$project$Main$decodeScreensize,
 										A3(
 											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-											'history',
-											$elm$json$Json$Decode$array($elm$json$Json$Decode$int),
+											'graph',
+											$elm$json$Json$Decode$array($author$project$Main$decodeGraphEntry),
 											A3(
 												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-												'current',
-												$elm$json$Json$Decode$int,
-												$elm$json$Json$Decode$succeed($author$project$Main$mkModel)))))))))))));
+												'history',
+												$elm$json$Json$Decode$array($elm$json$Json$Decode$int),
+												A3(
+													$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+													'current',
+													$elm$json$Json$Decode$int,
+													$elm$json$Json$Decode$succeed($author$project$Main$mkModel))))))))))))));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $author$project$Main$blockSize = 25;
 var $elm$core$Elm$JsArray$appendN = _JsArray_appendN;
@@ -6056,7 +6066,7 @@ var $author$project$Main$randomizeAllNotes = function (model) {
 		A2(
 			$elm$random$Random$list,
 			$elm$core$List$length(entryLst),
-			$author$project$Main$randomNoteOfClass(model.H)),
+			$author$project$Main$randomNoteOfClass(model.I)),
 		model.p);
 	var randomNotes = _v0.a;
 	var newSeed = _v0.b;
@@ -6282,13 +6292,13 @@ var $author$project$Main$init = function (flags) {
 							0,
 							_List_fromArray(
 								[6, 12])),
-						K: _Utils_Tuple2('125', 125),
-						U: $elm$core$Maybe$Nothing,
+						E: _Utils_Tuple2('125', 125),
+						P: $elm$core$Maybe$Nothing,
 						L: '3',
-						E: '6',
+						F: '6',
 						x: true,
 						p: $elm$random$Random$initialSeed(flags.Z),
-						H: 'pentatonic',
+						I: 'pentatonic',
 						q: {s: flags.s, u: flags.u},
 						z: false
 					}))),
@@ -6311,7 +6321,7 @@ var $author$project$Main$init = function (flags) {
 					_Utils_update(
 						model,
 						{
-							U: $elm$core$Maybe$Just('sorry no json')
+							P: $elm$core$Maybe$Just('sorry no json')
 						}),
 					c);
 			}(_default);
@@ -6735,7 +6745,7 @@ var $elm$core$Tuple$second = function (_v0) {
 	return y;
 };
 var $author$project$Main$subscriptions = function (model) {
-	var ms = model.K.b;
+	var ms = model.E.b;
 	return $elm$core$Platform$Sub$batch(
 		model.x ? _List_fromArray(
 			[
@@ -6765,7 +6775,7 @@ var $author$project$Main$changeNumberOfVoice = F2(
 						var offset = A2(
 							$elm$core$Maybe$withDefault,
 							0,
-							$elm$core$String$toInt(model.E));
+							$elm$core$String$toInt(model.F));
 						return _Utils_update(
 							model,
 							{
@@ -7052,7 +7062,7 @@ var $author$project$Main$encodeModel = function (model) {
 				$author$project$Main$encodeRandomSeed(model.p)),
 				_Utils_Tuple2(
 				'scalePreset',
-				$elm$json$Json$Encode$string(model.H)),
+				$elm$json$Json$Encode$string(model.I)),
 				_Utils_Tuple2(
 				'playing',
 				$elm$json$Json$Encode$bool(model.x)),
@@ -7067,10 +7077,13 @@ var $author$project$Main$encodeModel = function (model) {
 				$elm$json$Json$Encode$int(model.m)),
 				_Utils_Tuple2(
 				'offset',
-				$elm$json$Json$Encode$string(model.E)),
+				$elm$json$Json$Encode$string(model.F)),
 				_Utils_Tuple2(
 				'numberOfVoice',
-				$elm$json$Json$Encode$string(model.L))
+				$elm$json$Json$Encode$string(model.L)),
+				_Utils_Tuple2(
+				'intervalMs',
+				$elm$json$Json$Encode$int(model.E.b))
 			]));
 };
 var $author$project$Main$modelAsJSON = function (model) {
@@ -7237,7 +7250,7 @@ var $author$project$Main$setInterval = F2(
 		return _Utils_update(
 			model,
 			{
-				K: _Utils_Tuple2(str, ms)
+				E: _Utils_Tuple2(str, ms)
 			});
 	});
 var $author$project$Main$setNote = F3(
@@ -7273,7 +7286,7 @@ var $author$project$Main$setOffset = F2(
 					0,
 					_List_fromArray(
 						[0 + off, 0 + (2 * off)])),
-				E: input
+				F: input
 			});
 	});
 var $author$project$Main$setScale = F2(
@@ -7317,7 +7330,7 @@ var $author$project$Main$setScale = F2(
 			A3($elm$core$List$map2, updateEntry, pitches, filledGraph));
 		return _Utils_update(
 			model,
-			{a: newGraph, H: str});
+			{a: newGraph, I: str});
 	});
 var $author$project$Main$setCurrentVoiceIndex = F2(
 	function (newx, model) {
@@ -8242,7 +8255,7 @@ var $author$project$Main$view = function (model) {
 										$author$project$Main$playButton(model)
 									])),
 								$author$project$Main$newline,
-								$author$project$Main$selectScale(model.H),
+								$author$project$Main$selectScale(model.I),
 								$author$project$Main$newline,
 								$author$project$Main$newline,
 								A2(
@@ -8303,7 +8316,7 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$text('(reload the page to paste a preset)')
 									])),
 								$author$project$Main$newline,
-								$author$project$Main$editOffset(model.E),
+								$author$project$Main$editOffset(model.F),
 								$author$project$Main$newline,
 								$author$project$Main$newline,
 								A2(
@@ -8344,10 +8357,14 @@ var $author$project$Main$view = function (model) {
 												$elm$html$Html$Attributes$min('20'),
 												$elm$html$Html$Attributes$max('3000'),
 												$elm$html$Html$Attributes$step('1'),
-												$elm$html$Html$Attributes$value(model.K.a)
+												$elm$html$Html$Attributes$value(model.E.a)
 											]),
 										_List_Nil)
-									]))
+									])),
+								$author$project$Main$newline,
+								$author$project$Main$newline,
+								$elm$html$Html$text(
+								A2($elm$core$Maybe$withDefault, '', model.P))
 							]))
 					]))
 			]),

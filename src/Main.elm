@@ -509,6 +509,7 @@ encodeModel model =
         , ( "currentVoice", JE.int model.currentVoice )
         , ( "offset", JE.string model.offset )
         , ( "numberOfVoice", JE.string model.numberOfVoice )
+        , ( "intervalMs", JE.int (model.intervalMs |> Tuple.second) )
         ]
 
 
@@ -525,8 +526,9 @@ mkModel :
     -> Int
     -> String
     -> String
+    -> Int
     -> Model
-mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset numberOfVoice =
+mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset numberOfVoice intervalMs =
     { current = current
     , history = history
     , graph = graph
@@ -540,7 +542,7 @@ mkModel current history graph screenSize rndSeed scalePreset playing index showC
     , offset = offset
     , jsonError = Nothing
     , numberOfVoice = numberOfVoice
-    , intervalMs = ( "125", 125 )
+    , intervalMs = intervalMs |> (\i -> (String.fromInt i,i))
     }
 
 
@@ -559,6 +561,7 @@ decodeModel =
         |> required "currentVoice" JD.int
         |> required "offset" JD.string
         |> required "numberOfVoice" JD.string
+        |> required "intervalMs" JD.int
 
 
 initGraph : Array GraphEntry
@@ -1129,12 +1132,13 @@ viewEntry currentVoice isCurrent idx (GraphEntry g) =
                     ( o, p )
 
         attrs =
-            (Attr.class "graph-entry") ::
-            if isCurrent then
-                [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx ]
+            Attr.class "graph-entry"
+                :: (if isCurrent then
+                        [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx ]
 
-            else
-                [ Attr.style "background-color" <| Background.colorOfInt 16 idx ]
+                    else
+                        [ Attr.style "background-color" <| Background.colorOfInt 16 idx ]
+                   )
     in
     Html.div attrs
         [ Html.span [ Attr.class "slot-number" ] [ Html.text (String.fromInt idx) ]
@@ -1342,6 +1346,10 @@ view model =
                         ]
                         []
                     ]
+                ,newline 
+                ,newline
+                ,Html.text <| (model.jsonError |> Maybe.withDefault "")
+
                 ]
             ]
 
