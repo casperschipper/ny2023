@@ -44,7 +44,7 @@
 
 		app.ports.playNote.subscribe(function (note) {
 			var now = Tone.now();
-			synth.triggerAttackRelease(note, "64n", now);
+			synth.triggerAttackRelease(note, "8n", now);
 		});
 	}
 

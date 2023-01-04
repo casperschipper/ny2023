@@ -1032,7 +1032,7 @@ timeTick model =
             model.currentVoice
                 + 1
                 |> (\x ->
-                        if x > (List.length (Tuple.second model.index)) then
+                        if x > List.length (Tuple.second model.index) then
                             0
 
                         else
@@ -1230,7 +1230,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap (\idx g -> viewEntry model.currentVoice (getCurrentSlotForVoice model.currentVoice model == idx) idx g) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
+            Array.indexedMap (\idx g -> Html.Lazy.lazy4 viewEntry model.currentVoice (getCurrentSlotForVoice model.currentVoice model == idx) idx g) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "happy 2023! - gelukkig 2023!"
     , body =
