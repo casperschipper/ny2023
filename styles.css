@@ -1,18 +1,7 @@
-@media screen and (max-width:768px) {
-    .controls {
-        flex-wrap: wrap;
-    }
 
-    .myCol {
-        width: 100%;
-    }
 
-    select,
-    button,
-    input {
-        margin: 0 0.25em;
-    }
-
+input, select {
+    margin: 0 1em;
 }
 
 .colorblock {
@@ -30,49 +19,38 @@
 
 .highlight-voice-1 {
     box-sizing: border-box;
-    border: 2px solid;
-    border-color: red;
-}
+    outline: 2px solid red}
 
 .highlight-voice-0 {
     box-sizing: border-box;
-    border: 2px solid;
-    border-color: green;
+    outline: 2px solid green;
 }
 
 .highlight-voice-2 {
     box-sizing: border-box;
-    border: 2px solid;
-    border-color: blue;
+    outline: 2px solid blue;
 }
 
-.voice-1 {
-    border: 1px red solid;
-}
 
-.voice-2 {
-    border: 1p blue solid;
-}
-
-.voice-3 {
-    border: 1px green solid;
-}
 
 .controls {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.7);
     display: flex;
+    max-width:1000px;
 }
 
 .myCol {
     width: 500px;
+    max-width: 500px;
 }
 
 .half-transparant {
-    opacity: 0.2;
+    opacity: 0.45;
     font-size: 6px;
 }
 
 * {
+    box-sizing: border-box;
     font-family: monospace;
 }
 
@@ -125,3 +103,30 @@ button:active {
     transform: scale(0.99);
 }
 
+
+@media screen and (max-width:768px) {
+    .controls {
+        width:100%;
+        flex-wrap: wrap;
+    }
+
+    .myCol {
+        width: 100%;
+    }
+
+    li { 
+        width:100%;
+    }
+
+    select,
+    button,
+    input {
+        width:98%;
+        margin: 0.25em 0.25em;
+    }
+
+    .graph-entry {
+        margin: 0.5em 0;
+    }
+
+}

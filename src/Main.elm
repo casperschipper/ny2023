@@ -32,17 +32,18 @@ port copyJSON : String -> Cmd msg
 
 type alias Model =
     { current : Int
-    , history : Array Int
-    , graph : Array GraphEntry
+    , history : Array Int -- all the indexes
+    , graph : Array GraphEntry -- This is the main pattern table
     , screenSize : ScreenSize
     , rndSeed : Random.Seed
     , scalePreset : Scale
     , playing : Bool
-    , index : ( Int, List Int )
+    , index : ( Int, List Int ) -- there always needs to be at least one index, hence a non-empty list kind of type
     , showControls : Bool
     , currentVoice : Int
     , offset : String -- space between the three voices
-    , numberOfVoice : String
+    , numberOfVoice : String -- storing these things as strings, since the <input> itself may be a string in the end.
+    , intervalMs : ( String, Int ) -- interval in ms
     , jsonError : Maybe String
     }
 
@@ -64,6 +65,7 @@ type Msg
     | ToggleControls
     | SetOffset String
     | ChangeNumberOfVoice String
+    | SetInterval String
 
 
 
@@ -377,9 +379,13 @@ selectOctave toMsg currentOct =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
+    let
+        ms =
+            model.intervalMs |> Tuple.second
+    in
     Sub.batch
         (if model.playing then
-            [ Time.every 250 Tick ]
+            [ Time.every (ms |> toFloat) Tick ]
 
          else
             []
@@ -534,6 +540,7 @@ mkModel current history graph screenSize rndSeed scalePreset playing index showC
     , offset = offset
     , jsonError = Nothing
     , numberOfVoice = numberOfVoice
+    , intervalMs = ( "125", 125 )
     }
 
 
@@ -584,6 +591,7 @@ init flags =
               , offset = "6"
               , jsonError = Nothing
               , numberOfVoice = "3"
+              , intervalMs = ( "125", 125 )
               }
                 |> randomizeOpts
                 |> randomizeAllNotes
@@ -719,6 +727,18 @@ update msg model =
 
         ChangeNumberOfVoice n ->
             ( changeNumberOfVoice n model, Cmd.none )
+
+        SetInterval str ->
+            ( setInterval str model, Cmd.none )
+
+
+setInterval : String -> Model -> Model
+setInterval str model =
+    let
+        ms =
+            str |> String.toInt |> Maybe.withDefault 125
+    in
+    { model | intervalMs = ( str, ms ) }
 
 
 changeNumberOfVoice : String -> Model -> Model
@@ -1109,6 +1129,7 @@ viewEntry currentVoice isCurrent idx (GraphEntry g) =
                     ( o, p )
 
         attrs =
+            (Attr.class "graph-entry") ::
             if isCurrent then
                 [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx ]
 
@@ -1140,6 +1161,7 @@ selectScale currentSel =
     in
     Html.label []
         [ Html.text "Scale preset"
+        , newline
         , Html.select [ Events.onInput SetScale ] (List.map mkOpt options)
         ]
 
@@ -1265,6 +1287,7 @@ view model =
                 [ Html.h1 [] [ Html.text "Extra options:" ]
                 , Html.label []
                     [ Html.text "Start/stop:"
+                    , newline
                     , playButton model
                     ]
                 , newline
@@ -1305,6 +1328,20 @@ view model =
                         []
                     ]
                 , newline
+                , newline
+                , Html.label []
+                    [ Html.text "Set the time interval"
+                    , newline
+                    , Html.input
+                        [ Events.onInput SetInterval
+                        , Attr.type_ "number"
+                        , Attr.min "20"
+                        , Attr.max "3000"
+                        , Attr.step "1"
+                        , Attr.value (Tuple.first model.intervalMs)
+                        ]
+                        []
+                    ]
                 ]
             ]
 
