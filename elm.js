@@ -519,11 +519,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.Z.N === region.ad.N)
+	if (region._.O === region.ae.O)
 	{
-		return 'on line ' + region.Z.N;
+		return 'on line ' + region._.O;
 	}
-	return 'on lines ' + region.Z.N + ' through ' + region.ad.N;
+	return 'on lines ' + region._.O + ' through ' + region.ae.O;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aH,
-		impl.aP,
-		impl.aN,
+		impl.aI,
+		impl.aQ,
+		impl.aO,
 		function() { return function() {} }
 	);
 });
@@ -2720,8 +2720,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		w: func(record.w),
-		_: record._,
-		W: record.W
+		aa: record.aa,
+		X: record.X
 	}
 });
 
@@ -2990,10 +2990,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.w;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value._;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.aa;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.W) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.X) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aH,
-		impl.aP,
-		impl.aN,
+		impl.aI,
+		impl.aQ,
+		impl.aO,
 		function(sendToApp, initialModel) {
-			var view = impl.aQ;
+			var view = impl.aR;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aH,
-		impl.aP,
-		impl.aN,
+		impl.aI,
+		impl.aQ,
+		impl.aO,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.Y && impl.Y(sendToApp)
-			var view = impl.aQ;
+			var divertHrefToApp = impl.Z && impl.Z(sendToApp)
+			var view = impl.aR;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aA);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aB);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.aO) && (_VirtualDom_doc.title = title = doc.aO);
+				(title !== doc.aP) && (_VirtualDom_doc.title = title = doc.aP);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.aJ;
-	var onUrlRequest = impl.aK;
+	var onUrlChange = impl.aK;
+	var onUrlRequest = impl.aL;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		Y: function(sendToApp)
+		Z: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.ao === next.ao
-							&& curr.ag === next.ag
-							&& curr.al.a === next.al.a
+							&& curr.ap === next.ap
+							&& curr.ah === next.ah
+							&& curr.am.a === next.am.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		aH: function(flags)
+		aI: function(flags)
 		{
-			return A3(impl.aH, flags, _Browser_getUrl(), key);
+			return A3(impl.aI, flags, _Browser_getUrl(), key);
 		},
+		aR: impl.aR,
 		aQ: impl.aQ,
-		aP: impl.aP,
-		aN: impl.aN
+		aO: impl.aO
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { aF: 'hidden', aB: 'visibilitychange' }
+		? { aG: 'hidden', aC: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { aF: 'mozHidden', aB: 'mozvisibilitychange' }
+		? { aG: 'mozHidden', aC: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { aF: 'msHidden', aB: 'msvisibilitychange' }
+		? { aG: 'msHidden', aC: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { aF: 'webkitHidden', aB: 'webkitvisibilitychange' }
-		: { aF: 'hidden', aB: 'visibilitychange' };
+		? { aG: 'webkitHidden', aC: 'webkitvisibilitychange' }
+		: { aG: 'hidden', aC: 'visibilitychange' };
 }
 
 
@@ -4247,10 +4247,10 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		as: _Browser_getScene(),
-		av: {
-			aw: _Browser_window.pageXOffset,
-			ax: _Browser_window.pageYOffset,
+		at: _Browser_getScene(),
+		aw: {
+			ax: _Browser_window.pageXOffset,
+			ay: _Browser_window.pageYOffset,
 			u: _Browser_doc.documentElement.clientWidth,
 			s: _Browser_doc.documentElement.clientHeight
 		}
@@ -4286,13 +4286,13 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			as: {
+			at: {
 				u: node.scrollWidth,
 				s: node.scrollHeight
 			},
-			av: {
-				aw: node.scrollLeft,
-				ax: node.scrollTop,
+			aw: {
+				ax: node.scrollLeft,
+				ay: node.scrollTop,
 				u: node.clientWidth,
 				s: node.clientHeight
 			}
@@ -4324,16 +4324,16 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			as: _Browser_getScene(),
-			av: {
-				aw: x,
-				ax: y,
+			at: _Browser_getScene(),
+			aw: {
+				ax: x,
+				ay: y,
 				u: _Browser_doc.documentElement.clientWidth,
 				s: _Browser_doc.documentElement.clientHeight
 			},
-			aD: {
-				aw: x + rect.left,
-				ax: y + rect.top,
+			aE: {
+				ax: x + rect.left,
+				ay: y + rect.top,
 				u: rect.width,
 				s: rect.height
 			}
@@ -4958,7 +4958,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {af: fragment, ag: host, aj: path, al: port_, ao: protocol, ap: query};
+		return {ag: fragment, ah: host, ak: path, am: port_, ap: protocol, aq: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5378,7 +5378,9 @@ var $author$project$Main$mkModel = function (current) {
 								return function (showControls) {
 									return function (currentVoice) {
 										return function (offset) {
-											return {C: current, m: currentVoice, a: graph, l: history, h: index, S: $elm$core$Maybe$Nothing, J: offset, x: playing, p: rndSeed, G: scalePreset, q: screenSize, z: showControls};
+											return function (numberOfVoice) {
+												return {C: current, m: currentVoice, a: graph, l: history, g: index, T: $elm$core$Maybe$Nothing, K: numberOfVoice, E: offset, x: playing, p: rndSeed, H: scalePreset, q: screenSize, z: showControls};
+											};
 										};
 									};
 								};
@@ -5400,49 +5402,53 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	});
 var $author$project$Main$decodeModel = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'offset',
+	'numberOfVoice',
 	$elm$json$Json$Decode$string,
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'currentVoice',
-		$elm$json$Json$Decode$int,
+		'offset',
+		$elm$json$Json$Decode$string,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'showControls',
-			$elm$json$Json$Decode$bool,
+			'currentVoice',
+			$elm$json$Json$Decode$int,
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'index',
-				$author$project$Main$decodeIndex,
+				'showControls',
+				$elm$json$Json$Decode$bool,
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'playing',
-					$elm$json$Json$Decode$bool,
+					'index',
+					$author$project$Main$decodeIndex,
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'scalePreset',
-						$elm$json$Json$Decode$string,
+						'playing',
+						$elm$json$Json$Decode$bool,
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'rndSeed',
-							$author$project$Main$decodeRandomSeed,
+							'scalePreset',
+							$elm$json$Json$Decode$string,
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'screenSize',
-								$author$project$Main$decodeScreensize,
+								'rndSeed',
+								$author$project$Main$decodeRandomSeed,
 								A3(
 									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'graph',
-									$elm$json$Json$Decode$array($author$project$Main$decodeGraphEntry),
+									'screenSize',
+									$author$project$Main$decodeScreensize,
 									A3(
 										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-										'history',
-										$elm$json$Json$Decode$array($elm$json$Json$Decode$int),
+										'graph',
+										$elm$json$Json$Decode$array($author$project$Main$decodeGraphEntry),
 										A3(
 											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-											'current',
-											$elm$json$Json$Decode$int,
-											$elm$json$Json$Decode$succeed($author$project$Main$mkModel))))))))))));
+											'history',
+											$elm$json$Json$Decode$array($elm$json$Json$Decode$int),
+											A3(
+												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+												'current',
+												$elm$json$Json$Decode$int,
+												$elm$json$Json$Decode$succeed($author$project$Main$mkModel)))))))))))));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $author$project$Main$blockSize = 25;
 var $elm$core$Elm$JsArray$appendN = _JsArray_appendN;
@@ -6035,7 +6041,7 @@ var $author$project$Main$randomizeAllNotes = function (model) {
 		A2(
 			$elm$random$Random$list,
 			$elm$core$List$length(entryLst),
-			$author$project$Main$randomNoteOfClass(model.G)),
+			$author$project$Main$randomNoteOfClass(model.H)),
 		model.p);
 	var randomNotes = _v0.a;
 	var newSeed = _v0.b;
@@ -6257,20 +6263,21 @@ var $author$project$Main$init = function (flags) {
 						m: 0,
 						a: $author$project$Main$initGraph,
 						l: $elm$core$Array$empty,
-						h: _Utils_Tuple2(
+						g: _Utils_Tuple2(
 							0,
 							_List_fromArray(
 								[6, 12])),
-						S: $elm$core$Maybe$Nothing,
-						J: '6',
+						T: $elm$core$Maybe$Nothing,
+						K: '3',
+						E: '6',
 						x: true,
-						p: $elm$random$Random$initialSeed(flags.X),
-						G: 'pentatonic',
+						p: $elm$random$Random$initialSeed(flags.Y),
+						H: 'pentatonic',
 						q: {s: flags.s, u: flags.u},
 						z: false
 					}))),
 		$elm$core$Platform$Cmd$none);
-	var _v0 = flags.T;
+	var _v0 = flags.U;
 	if (_v0 === '') {
 		return _default;
 	} else {
@@ -6288,7 +6295,7 @@ var $author$project$Main$init = function (flags) {
 					_Utils_update(
 						model,
 						{
-							S: $elm$core$Maybe$Just('sorry no json')
+							T: $elm$core$Maybe$Just('sorry no json')
 						}),
 					c);
 			}(_default);
@@ -6305,7 +6312,7 @@ var $elm$time$Time$Every = F2(
 	});
 var $elm$time$Time$State = F2(
 	function (taggers, processes) {
-		return {an: processes, au: taggers};
+		return {ao: processes, av: taggers};
 	});
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
@@ -6597,7 +6604,7 @@ var $elm$time$Time$spawnHelp = F3(
 	});
 var $elm$time$Time$onEffects = F3(
 	function (router, subs, _v0) {
-		var processes = _v0.an;
+		var processes = _v0.ao;
 		var rightStep = F3(
 			function (_v6, id, _v7) {
 				var spawns = _v7.a;
@@ -6666,7 +6673,7 @@ var $elm$time$Time$millisToPosix = $elm$core$Basics$identity;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
 var $elm$time$Time$onSelfMsg = F3(
 	function (router, interval, state) {
-		var _v0 = A2($elm$core$Dict$get, interval, state.au);
+		var _v0 = A2($elm$core$Dict$get, interval, state.av);
 		if (_v0.$ === 1) {
 			return $elm$core$Task$succeed(state);
 		} else {
@@ -6711,12 +6718,53 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$batch(
 		model.x ? _List_fromArray(
 			[
-				A2($elm$time$Time$every, 125, $author$project$Main$Tick)
+				A2($elm$time$Time$every, 250, $author$project$Main$Tick)
 			]) : _List_Nil);
 };
 var $author$project$Main$SetNote = F2(
 	function (a, b) {
 		return {$: 6, a: a, b: b};
+	});
+var $author$project$Main$changeNumberOfVoice = F2(
+	function (n, model) {
+		var newModel = function () {
+			var _v0 = $elm$core$String$toInt(n);
+			if (!_v0.$) {
+				switch (_v0.a) {
+					case 0:
+						return model;
+					case 1:
+						return _Utils_update(
+							model,
+							{
+								g: _Utils_Tuple2(0, _List_Nil)
+							});
+					default:
+						var moreThanOne = _v0.a;
+						var offset = A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							$elm$core$String$toInt(model.E));
+						return _Utils_update(
+							model,
+							{
+								g: _Utils_Tuple2(
+									0,
+									A2(
+										$elm$core$List$map,
+										function (x) {
+											return x * offset;
+										},
+										A2($elm$core$List$range, 1, moreThanOne - 1)))
+							});
+				}
+			} else {
+				return model;
+			}
+		}();
+		return _Utils_update(
+			newModel,
+			{K: n});
 	});
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$copyJSON = _Platform_outgoingPort('copyJSON', $elm$json$Json$Encode$string);
@@ -6983,13 +7031,13 @@ var $author$project$Main$encodeModel = function (model) {
 				$author$project$Main$encodeRandomSeed(model.p)),
 				_Utils_Tuple2(
 				'scalePreset',
-				$elm$json$Json$Encode$string(model.G)),
+				$elm$json$Json$Encode$string(model.H)),
 				_Utils_Tuple2(
 				'playing',
 				$elm$json$Json$Encode$bool(model.x)),
 				_Utils_Tuple2(
 				'index',
-				$author$project$Main$encodeIndex(model.h)),
+				$author$project$Main$encodeIndex(model.g)),
 				_Utils_Tuple2(
 				'showControls',
 				$elm$json$Json$Encode$bool(model.z)),
@@ -6998,7 +7046,10 @@ var $author$project$Main$encodeModel = function (model) {
 				$elm$json$Json$Encode$int(model.m)),
 				_Utils_Tuple2(
 				'offset',
-				$elm$json$Json$Encode$string(model.J))
+				$elm$json$Json$Encode$string(model.E)),
+				_Utils_Tuple2(
+				'numberOfVoice',
+				$elm$json$Json$Encode$string(model.K))
 			]));
 };
 var $author$project$Main$modelAsJSON = function (model) {
@@ -7009,7 +7060,7 @@ var $author$project$Main$modelAsJSON = function (model) {
 };
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Main$getCurrentVoiceIndex = function (model) {
-	var _v0 = _Utils_Tuple2(model.h, model.m);
+	var _v0 = _Utils_Tuple2(model.g, model.m);
 	if (!_v0.a.b.b) {
 		var _v1 = _v0.a;
 		var idx = _v1.a;
@@ -7185,11 +7236,11 @@ var $author$project$Main$setOffset = F2(
 		return _Utils_update(
 			model,
 			{
-				h: _Utils_Tuple2(
+				g: _Utils_Tuple2(
 					0,
 					_List_fromArray(
 						[0 + off, 0 + (2 * off)])),
-				J: input
+				E: input
 			});
 	});
 var $author$project$Main$setScale = F2(
@@ -7233,7 +7284,7 @@ var $author$project$Main$setScale = F2(
 			A3($elm$core$List$map2, updateEntry, pitches, filledGraph));
 		return _Utils_update(
 			model,
-			{a: newGraph, G: str});
+			{a: newGraph, H: str});
 	});
 var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
@@ -7241,7 +7292,7 @@ var $elm$core$Tuple$second = function (_v0) {
 };
 var $author$project$Main$setCurrentVoiceIndex = F2(
 	function (newx, model) {
-		var _v0 = model.h;
+		var _v0 = model.g;
 		if (!_v0.b.b) {
 			return _Utils_Tuple2(newx, _List_Nil);
 		} else {
@@ -7277,13 +7328,13 @@ var $author$project$Main$timeTick = function (model) {
 	var newCurrentVoice = function (x) {
 		return (_Utils_cmp(
 			x,
-			$elm$core$List$length(model.h.b) + 1) > 0) ? 0 : x;
+			$elm$core$List$length(model.g.b)) > 0) ? 0 : x;
 	}(model.m + 1);
 	return _Utils_update(
 		model,
 		{
 			m: newCurrentVoice,
-			h: A2($author$project$Main$setCurrentVoiceIndex, safeIndex, model)
+			g: A2($author$project$Main$setCurrentVoiceIndex, safeIndex, model)
 		});
 };
 var $author$project$Main$update = F2(
@@ -7367,13 +7418,21 @@ var $author$project$Main$update = F2(
 						model,
 						{z: !model.z}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 14:
 				var inputStr = msg.a;
 				return _Utils_Tuple2(
 					A2($author$project$Main$setOffset, inputStr, model),
 					$elm$core$Platform$Cmd$none);
+			default:
+				var n = msg.a;
+				return _Utils_Tuple2(
+					A2($author$project$Main$changeNumberOfVoice, n, model),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Main$ChangeNumberOfVoice = function (a) {
+	return {$: 15, a: a};
+};
 var $author$project$Main$CopyJSON = {$: 7};
 var $author$project$Main$RandomizeAll = {$: 8};
 var $author$project$Main$RandomizeOpts = {$: 9};
@@ -7675,12 +7734,12 @@ var $author$project$Main$lookupIndexInHistory = F2(
 		return A2(
 			$elm$core$Maybe$withDefault,
 			-1,
-			A2($elm$core$Array$get, model.h.a, model.l));
+			A2($elm$core$Array$get, model.g.a, model.l));
 	});
 var $author$project$Main$getCurrentSlotForVoice = F2(
 	function (voiceNum, model) {
 		if (!voiceNum) {
-			return A2($author$project$Main$lookupIndexInHistory, model.h.a, model);
+			return A2($author$project$Main$lookupIndexInHistory, model.g.a, model);
 		} else {
 			var nonZero = voiceNum;
 			return A2(
@@ -7694,7 +7753,7 @@ var $author$project$Main$getCurrentSlotForVoice = F2(
 					A2(
 						$elm$core$Array$get,
 						nonZero,
-						$elm$core$Array$fromList(model.h.b))));
+						$elm$core$Array$fromList(model.g.b))));
 		}
 	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -7852,6 +7911,9 @@ var $author$project$Main$showIf = function (show) {
 			A2($elm$html$Html$Attributes$style, 'display', 'none')
 		]);
 };
+var $elm$html$Html$Attributes$step = function (n) {
+	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
+};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Main$ChangedInput = F2(
 	function (a, b) {
@@ -7956,9 +8018,9 @@ var $author$project$Main$viewOptsAsColors = function (opts) {
 				opts)));
 };
 var $author$project$Main$viewEntry = F4(
-	function (currentVoice, current, idx, _v0) {
+	function (currentVoice, isCurrent, idx, _v0) {
 		var g = _v0;
-		var attrs = _Utils_eq(current, idx) ? _List_fromArray(
+		var attrs = isCurrent ? _List_fromArray(
 			[
 				$elm$html$Html$Attributes$class(
 				'highlight-voice-' + $elm$core$String$fromInt(currentVoice)),
@@ -8041,13 +8103,20 @@ var $author$project$Main$view = function (model) {
 			},
 			A2(
 				$elm$core$Array$indexedMap,
-				A2(
-					$author$project$Main$viewEntry,
-					model.m,
-					A2($author$project$Main$getCurrentSlotForVoice, model.m, model)),
+				F2(
+					function (idx, g) {
+						return A4(
+							$author$project$Main$viewEntry,
+							model.m,
+							_Utils_eq(
+								A2($author$project$Main$getCurrentSlotForVoice, model.m, model),
+								idx),
+							idx,
+							g);
+					}),
 				model.a)));
 	return {
-		aA: _List_fromArray(
+		aB: _List_fromArray(
 			[
 				$author$project$Main$showHideControlsButton(model.z),
 				A2($elm$html$Html$br, _List_Nil, _List_Nil),
@@ -8130,7 +8199,7 @@ var $author$project$Main$view = function (model) {
 										$author$project$Main$playButton(model)
 									])),
 								$author$project$Main$newline,
-								$author$project$Main$selectScale(model.G),
+								$author$project$Main$selectScale(model.H),
 								$author$project$Main$newline,
 								$author$project$Main$newline,
 								A2(
@@ -8191,15 +8260,38 @@ var $author$project$Main$view = function (model) {
 										$elm$html$Html$text('(reload the page to paste a preset)')
 									])),
 								$author$project$Main$newline,
-								$author$project$Main$editOffset(model.J)
+								$author$project$Main$editOffset(model.E),
+								$author$project$Main$newline,
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$label,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Set the number of voices:'),
+										$author$project$Main$newline,
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onInput($author$project$Main$ChangeNumberOfVoice),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('1'),
+												$elm$html$Html$Attributes$max('8'),
+												$elm$html$Html$Attributes$step('1'),
+												$elm$html$Html$Attributes$value(model.K)
+											]),
+										_List_Nil)
+									])),
+								$author$project$Main$newline
 							]))
 					]))
 			]),
-		aO: 'happy 2023! - gelukkig 2023!'
+		aP: 'happy 2023! - gelukkig 2023!'
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$document(
-	{aH: $author$project$Main$init, aN: $author$project$Main$subscriptions, aP: $author$project$Main$update, aQ: $author$project$Main$view});
+	{aI: $author$project$Main$init, aO: $author$project$Main$subscriptions, aQ: $author$project$Main$update, aR: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	A2(
 		$elm$json$Json$Decode$andThen,
@@ -8214,7 +8306,7 @@ _Platform_export({'Main':{'init':$author$project$Main$main(
 								$elm$json$Json$Decode$andThen,
 								function (height) {
 									return $elm$json$Json$Decode$succeed(
-										{s: height, T: json, X: seed, u: width});
+										{s: height, U: json, Y: seed, u: width});
 								},
 								A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$int));
 						},

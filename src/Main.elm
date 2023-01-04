@@ -6,6 +6,7 @@ import Browser
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Html.Lazy
 import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline as JDP exposing (required)
 import Json.Encode as JE exposing (Value)
@@ -41,6 +42,7 @@ type alias Model =
     , showControls : Bool
     , currentVoice : Int
     , offset : String -- space between the three voices
+    , numberOfVoice : String
     , jsonError : Maybe String
     }
 
@@ -61,6 +63,7 @@ type Msg
     | Stop
     | ToggleControls
     | SetOffset String
+    | ChangeNumberOfVoice String
 
 
 
@@ -376,7 +379,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         (if model.playing then
-            [ Time.every 125 Tick ]
+            [ Time.every 250 Tick ]
 
          else
             []
@@ -499,11 +502,25 @@ encodeModel model =
         , ( "showControls", JE.bool model.showControls )
         , ( "currentVoice", JE.int model.currentVoice )
         , ( "offset", JE.string model.offset )
+        , ( "numberOfVoice", JE.string model.numberOfVoice )
         ]
 
 
-mkModel : Int -> Array Int -> Array.Array GraphEntry -> ScreenSize -> Random.Seed -> String -> Bool -> ( Int, List Int ) -> Bool -> Int -> String -> Model
-mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset =
+mkModel :
+    Int
+    -> Array Int
+    -> Array.Array GraphEntry
+    -> ScreenSize
+    -> Random.Seed
+    -> String
+    -> Bool
+    -> ( Int, List Int )
+    -> Bool
+    -> Int
+    -> String
+    -> String
+    -> Model
+mkModel current history graph screenSize rndSeed scalePreset playing index showControls currentVoice offset numberOfVoice =
     { current = current
     , history = history
     , graph = graph
@@ -516,6 +533,7 @@ mkModel current history graph screenSize rndSeed scalePreset playing index showC
     , currentVoice = currentVoice
     , offset = offset
     , jsonError = Nothing
+    , numberOfVoice = numberOfVoice
     }
 
 
@@ -533,6 +551,7 @@ decodeModel =
         |> required "showControls" JD.bool
         |> required "currentVoice" JD.int
         |> required "offset" JD.string
+        |> required "numberOfVoice" JD.string
 
 
 initGraph : Array GraphEntry
@@ -564,6 +583,7 @@ init flags =
               , currentVoice = 0
               , offset = "6"
               , jsonError = Nothing
+              , numberOfVoice = "3"
               }
                 |> randomizeOpts
                 |> randomizeAllNotes
@@ -696,6 +716,38 @@ update msg model =
 
         SetOffset inputStr ->
             ( setOffset inputStr model, Cmd.none )
+
+        ChangeNumberOfVoice n ->
+            ( changeNumberOfVoice n model, Cmd.none )
+
+
+changeNumberOfVoice : String -> Model -> Model
+changeNumberOfVoice n model =
+    let
+        newModel =
+            case String.toInt n of
+                Just 0 ->
+                    model
+
+                Just 1 ->
+                    { model | index = ( 0, [] ) }
+
+                Just moreThanOne ->
+                    let
+                        offset =
+                            String.toInt model.offset |> Maybe.withDefault 0
+                    in
+                    { model
+                        | index =
+                            ( 0
+                            , List.range 1 (moreThanOne - 1) |> List.map (\x -> x * offset)
+                            )
+                    }
+
+                Nothing ->
+                    model
+    in
+    { newModel | numberOfVoice = n }
 
 
 setOffset : String -> Model -> Model
@@ -980,7 +1032,7 @@ timeTick model =
             model.currentVoice
                 + 1
                 |> (\x ->
-                        if x > (List.length (Tuple.second model.index) + 1) then
+                        if x > (List.length (Tuple.second model.index)) then
                             0
 
                         else
@@ -1048,8 +1100,8 @@ viewOptsAsColors opts =
         )
 
 
-viewEntry : Int -> Int -> Int -> GraphEntry -> Html Msg
-viewEntry currentVoice current idx (GraphEntry g) =
+viewEntry : Int -> Bool -> Int -> GraphEntry -> Html Msg
+viewEntry currentVoice isCurrent idx (GraphEntry g) =
     let
         ( octave, pitch ) =
             case g.note of
@@ -1057,8 +1109,8 @@ viewEntry currentVoice current idx (GraphEntry g) =
                     ( o, p )
 
         attrs =
-            if current == idx then
-                [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx]
+            if isCurrent then
+                [ Attr.class ("highlight-voice-" ++ String.fromInt currentVoice), Attr.style "background-color" <| Background.colorOfInt 16 idx ]
 
             else
                 [ Attr.style "background-color" <| Background.colorOfInt 16 idx ]
@@ -1109,12 +1161,14 @@ showHideControlsButton : Bool -> Html Msg
 showHideControlsButton showControls =
     Html.label [ Attr.style "background-color" "white", Attr.style "float" "right" ]
         [ Html.input [ Attr.type_ "checkbox", Attr.selected showControls, Events.onClick ToggleControls ] []
-        , Html.span [Attr.style "font-size" "24px"] [Html.text <|
-            if showControls then
-                "control panel"
+        , Html.span [ Attr.style "font-size" "24px" ]
+            [ Html.text <|
+                if showControls then
+                    "control panel"
 
-            else
-                "control panel"]
+                else
+                    "control panel"
+            ]
         ]
 
 
@@ -1176,7 +1230,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         entries =
-            Array.indexedMap (viewEntry model.currentVoice (getCurrentSlotForVoice model.currentVoice model)) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
+            Array.indexedMap (\idx g -> viewEntry model.currentVoice (getCurrentSlotForVoice model.currentVoice model == idx) idx g) model.graph |> Array.map (\item -> Html.li [] [ item ]) |> Array.toList
     in
     { title = "happy 2023! - gelukkig 2023!"
     , body =
@@ -1235,6 +1289,22 @@ view model =
                 , Html.i [] [ Html.text "(reload the page to paste a preset)" ]
                 , newline
                 , editOffset model.offset
+                , newline
+                , newline
+                , Html.label []
+                    [ Html.text "Set the number of voices:"
+                    , newline
+                    , Html.input
+                        [ Events.onInput ChangeNumberOfVoice
+                        , Attr.type_ "number"
+                        , Attr.min "1"
+                        , Attr.max "8"
+                        , Attr.step "1"
+                        , Attr.value model.numberOfVoice
+                        ]
+                        []
+                    ]
+                , newline
                 ]
             ]
 
