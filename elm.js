@@ -5336,7 +5336,7 @@ var $author$project$Main$decodeIndex = A3(
 	A2($elm$json$Json$Decode$field, 'first', $elm$json$Json$Decode$int),
 	A2(
 		$elm$json$Json$Decode$field,
-		'reset',
+		'rest',
 		$elm$json$Json$Decode$list($elm$json$Json$Decode$int)));
 var $elm$random$Random$Seed = F2(
 	function (a, b) {
@@ -7486,6 +7486,7 @@ var $author$project$Main$RandomizeOpts = {$: 9};
 var $author$project$Main$SetInterval = function (a) {
 	return {$: 16, a: a};
 };
+var $elm$html$Html$a = _VirtualDom_node('a');
 var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
@@ -7807,6 +7808,12 @@ var $author$project$Main$getCurrentSlotForVoice = F2(
 		}
 	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
 var $elm$html$Html$i = _VirtualDom_node('i');
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$core$Elm$JsArray$map = _JsArray_map;
@@ -8362,6 +8369,24 @@ var $author$project$Main$view = function (model) {
 										_List_Nil)
 									])),
 								$author$project$Main$newline,
+								$author$project$Main$newline,
+								A2(
+								$elm$html$Html$span,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('written in Elm 🌳')
+									])),
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$href('https://github.com/casperschipper/ny2023')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('(view source)')
+									])),
 								$author$project$Main$newline,
 								$elm$html$Html$text(
 								A2($elm$core$Maybe$withDefault, '', model.P))

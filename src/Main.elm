@@ -491,7 +491,7 @@ decodeIndex : Decoder ( Int, List Int )
 decodeIndex =
     JD.map2 Tuple.pair
         (JD.field "first" JD.int)
-        (JD.field "reset" (JD.list JD.int))
+        (JD.field "rest" (JD.list JD.int))
 
 
 encodeModel : Model -> JE.Value
@@ -1347,6 +1347,9 @@ view model =
                         []
                     ]
                 ,newline 
+                ,newline
+                ,Html.span [] [Html.text "written in Elm 🌳"]
+                ,Html.a [Attr.href "https://github.com/casperschipper/ny2023"] [Html.text "(view source)"]
                 ,newline
                 ,Html.text <| (model.jsonError |> Maybe.withDefault "")
 
