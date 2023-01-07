@@ -7858,6 +7858,7 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$Main$Start = {$: 11};
 var $author$project$Main$Stop = {$: 12};
 var $author$project$Main$playButton = function (model) {
@@ -7972,6 +7973,7 @@ var $author$project$Main$showIf = function (show) {
 var $elm$html$Html$Attributes$step = function (n) {
 	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
 };
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Main$ChangedInput = F2(
 	function (a, b) {
@@ -8371,21 +8373,22 @@ var $author$project$Main$view = function (model) {
 								$author$project$Main$newline,
 								$author$project$Main$newline,
 								A2(
-								$elm$html$Html$span,
+								$elm$html$Html$p,
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('written in Elm 🌳')
-									])),
-								A2(
-								$elm$html$Html$a,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$href('https://github.com/casperschipper/ny2023')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('(view source)')
+										$elm$html$Html$text('written in Elm 🌳'),
+										A2(
+										$elm$html$Html$a,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$target('_blank'),
+												$elm$html$Html$Attributes$href('https://github.com/casperschipper/ny2023')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('(view source)')
+											]))
 									])),
 								$author$project$Main$newline,
 								$elm$html$Html$text(

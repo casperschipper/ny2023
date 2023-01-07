@@ -542,7 +542,7 @@ mkModel current history graph screenSize rndSeed scalePreset playing index showC
     , offset = offset
     , jsonError = Nothing
     , numberOfVoice = numberOfVoice
-    , intervalMs = intervalMs |> (\i -> (String.fromInt i,i))
+    , intervalMs = intervalMs |> (\i -> ( String.fromInt i, i ))
     }
 
 
@@ -1346,13 +1346,11 @@ view model =
                         ]
                         []
                     ]
-                ,newline 
-                ,newline
-                ,Html.span [] [Html.text "written in Elm 🌳"]
-                ,Html.a [Attr.href "https://github.com/casperschipper/ny2023"] [Html.text "(view source)"]
-                ,newline
-                ,Html.text <| (model.jsonError |> Maybe.withDefault "")
-
+                , newline
+                , newline
+                , Html.p [] [ Html.text "written in Elm 🌳", Html.a [ Attr.target "_blank", Attr.href "https://github.com/casperschipper/ny2023" ] [ Html.text "(view source)" ] ]
+                , newline
+                , Html.text <| (model.jsonError |> Maybe.withDefault "")
                 ]
             ]
 
