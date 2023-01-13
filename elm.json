@@ -14,7 +14,8 @@
             "elm/random": "1.0.0",
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
-            "folkertdev/elm-state": "3.0.1"
+            "folkertdev/elm-state": "3.0.1",
+            "the-sett/lazy-list": "1.1.2"
         },
         "indirect": {
             "elm/url": "1.0.0",

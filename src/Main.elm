@@ -432,25 +432,7 @@ encodeGraphEntry (GraphEntry g) =
         , ( "note", encodeNote g.note )
         ]
 
-type alias Seq a =
-    (() -> Node a)
 
-type Node a
-    = Cons a (Seq a)
-    | Nil
-
-empty : Seq a
-empty () =
-    Nil
-
-
-cons : a -> Seq a -> Seq a
-cons x acc () = 
-    Cons x acc
-
-cycle : List a -> Seq a
-cycle lst =
-    List.foldl (\x acc () -> Cons x acc) empty lst
 
 entryAsString : GraphEntry -> String
 entryAsString (GraphEntry g) =
