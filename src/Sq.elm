@@ -1,11 +1,13 @@
 module Sq exposing (..)
 
 import Random
-import Seq exposing (Seq)
 import State exposing (State)
+import Main exposing (PitchClass(..))
+import Seq exposing (Seq)
 
 type CispST
     = CispST { seed : Random.Seed }
+
 
 
 initState : Int -> CispST
@@ -35,14 +37,6 @@ rv a b =
 
     in
     Compute (rst) 
-
-repeat : Int -> Value -> Seq Value
-repeat n value =
-    if n < 1 then
-        Seq.Nil
-    else
-        Seq.Cons value (\() -> repeat (n - 1) value)
-
 toList : CispST -> Seq Value -> List Int
 toList state sq =
     let 
@@ -56,6 +50,22 @@ toList state sq =
     in
     State.finalValue state (states |> Seq.toList |> State.combine) 
 
+
+myList = 
+    [V 3, V 9, V 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle 
+
+lstA =
+    [1,2,3,4] |> List.map V |> Seq.fromList 
+
+lstB =
+    [33,22,11] |> List.map V |> Seq.fromList
+
+lstC =
+    [100,200,300,400,500] |> List.map V |> Seq.fromList
+
+combi : List Int
+combi =
+    [lstA,lstB,lstC] |> Seq.fromList |> Seq.transpose |> Seq.concat |> Seq.take 20 |> toList (initState 3)
 
 -- An infinite sequence of random number between a and b
 
