@@ -5,6 +5,7 @@ import Main exposing (PitchClass(..))
 import Random
 import Seq exposing (Seq)
 import State exposing (State)
+import Seq exposing (Node(..))
 
 
 type CispST
@@ -23,7 +24,7 @@ initState initialSeed =
 -- State return, just takes an s and embeds it into a state transformer
 
 
-type Value
+type  Value
     = V Int
     | Compute (State CispST Int)
 
@@ -65,6 +66,10 @@ toList state sq =
 
 myList =
     [ V 3, V 9, V 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle
+
+
+
+                    
 
 
 lstA =

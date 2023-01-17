@@ -1,5 +1,4 @@
 module Seq exposing (..)
-import Html exposing (a)
 
 
 type alias Seq a =
@@ -11,19 +10,24 @@ type Node a
     | Nil
 
 
+lengthHelper : Seq a -> Int -> Int
 lengthHelper seq acc =
     case seq () of
-        Nil -> acc
+        Nil ->
+            acc
 
-        Cons _ tail -> lengthHelper tail (1 + acc)
+        Cons _ tail ->
+            lengthHelper tail (1 + acc)
 
+
+length : Seq a -> Int
 length sq =
     lengthHelper sq 0
-        
+
 
 toList : Seq a -> List a
 toList sq =
-    let 
+    let
         aux seq acc =
             case seq () of
                 Nil ->
@@ -32,7 +36,8 @@ toList sq =
                 Cons x tail ->
                     aux tail (x :: acc)
     in
-    aux sq [] 
+    aux sq []
+
 
 empty : Seq a
 empty () =
@@ -42,12 +47,13 @@ empty () =
 fromListHelper : List a -> Seq a -> Seq a
 fromListHelper lst acc =
     case lst of
-        [] -> 
+        [] ->
             reverse acc
 
-        x :: xs -> 
+        x :: xs ->
             fromListHelper xs (\() -> Cons x acc)
-            
+
+
 fromList : List a -> Seq a
 fromList lst () =
     case lst of
@@ -55,7 +61,7 @@ fromList lst () =
             Nil
 
         x :: xs ->
-            Cons x (fromList xs) 
+            Cons x (fromList xs)
 
 
 repeat : Int -> a -> Seq a
@@ -67,23 +73,39 @@ repeat n x () =
         Cons x (repeat (n - 1) x)
 
 
+
+
 mapHelper : (a -> b) -> Seq a -> Seq b -> Seq b
 mapHelper fn sq acc =
     case sq () of
-        Nil -> reverse acc
+        Nil ->
+            reverse acc
 
         Cons x xs ->
             mapHelper fn xs (\() -> Cons (fn x) acc)
 
+
 map : (a -> b) -> Seq a -> Seq b
 map f sq =
     mapHelper f sq empty
-    
 
-    
+map2 : (a -> b -> c) -> Seq a -> Seq b -> Seq c
+map2 f sq1 sq2 () =
+    case sq1 () of
+        Nil -> Nil
 
+        Cons x xs -> 
+            case sq2 () of
+                Nil -> Nil
 
-andThen : (a -> Seq b) -> Seq a -> Seq b 
+                Cons x2 xs2 ->
+                    Cons (f x x2) (map2 f xs xs2)
+
+hold : Seq Int -> Seq a -> Seq a
+hold holder input =
+    map2 repeat holder input |> concat
+ 
+andThen : (a -> Seq b) -> Seq a -> Seq b
 andThen f sq =
     map f sq |> concat
 
@@ -91,18 +113,20 @@ andThen f sq =
 foldl : (acc -> a -> acc) -> acc -> Seq a -> acc
 foldl f acc sq =
     case sq () of
-        Nil -> acc
+        Nil ->
+            acc
 
-        Cons x xs -> 
+        Cons x xs ->
             foldl f (f acc x) xs
+
 
 reverseHelper : Seq a -> Seq a -> Seq a
 reverseHelper seq acc =
     case seq () of
-        Nil -> 
+        Nil ->
             acc
 
-        Cons x xs -> 
+        Cons x xs ->
             reverseHelper xs (\() -> Cons x acc)
 
 
@@ -115,34 +139,34 @@ flip : (a -> b -> c) -> b -> a -> c
 flip f x y =
     f y x
 
+
 reverse : Seq a -> Seq a
 reverse sq =
     foldl (flip cons) empty sq
 
 
-zip : Seq a -> Seq b -> Seq (a,b)
+zip : Seq a -> Seq b -> Seq ( a, b )
 zip sq1 sq2 () =
     let
-        helper sq11 sq22 acc () = 
+        helper sq11 sq22 acc () =
             case sq11 () of
-                Nil -> acc
+                Nil ->
+                    acc
 
-                Cons x tail -> 
+                Cons x tail ->
                     case sq22 () of
-                        Nil -> 
+                        Nil ->
                             Nil
 
                         Cons x2 tail2 ->
-                            helper tail tail2 (Cons (x,x2) (\() -> acc)) ()
-
+                            helper tail tail2 (Cons ( x, x2 ) (\() -> acc)) ()
     in
     reverse (helper sq1 sq2 Nil) ()
-    
-    
+
 
 andMap : Seq (a -> b) -> Seq a -> Seq b
 andMap fsq sq =
-    zip fsq sq |> map (\(f,x) -> f x )
+    zip fsq sq |> map (\( f, x ) -> f x)
 
 
 take : Int -> Seq a -> Seq a
@@ -172,7 +196,6 @@ filter_map f sq () =
 
         Nil ->
             Nil
-
 
 
 unzip : Seq ( a, b ) -> ( Seq a, Seq b )
@@ -212,6 +235,7 @@ cycle_nonempty xs () =
 
 cycle : Seq a -> Seq a
 cycle sq () =
+    {- not tail recursive -}
     case sq () of
         Nil ->
             Nil
@@ -222,6 +246,7 @@ cycle sq () =
 
 concat : Seq (Seq a) -> Seq a
 concat sqq () =
+    {- not tail recursive -}
     case sqq () of
         Nil ->
             Nil
@@ -242,6 +267,17 @@ isEmpty sq =
 
 transpose : Seq (Seq a) -> Seq (Seq a)
 transpose sqq () =
+    {-
+       1 2 3
+       4 5 6
+       7 8 9
+
+       1 4 7
+       2 5 8
+       3 6 9
+
+       Not tail recursive !
+    -}
     let
         ( heads, tails ) =
             peel sqq
