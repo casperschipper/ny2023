@@ -3,9 +3,8 @@ module Sq exposing (..)
 import Dict exposing (Dict)
 import Main exposing (PitchClass(..))
 import Random
-import Seq exposing (Seq)
-import State exposing (State)
-import Seq exposing (Node(..))
+import Seq exposing (Node(..), Seq)
+import State exposing (State, state)
 
 
 type CispST
@@ -15,6 +14,205 @@ type CispST
         }
 
 
+generateRandom : Int -> Int -> CispST -> ( Int, CispST )
+generateRandom a b (CispST state) =
+    let
+        ( x, newSeed ) =
+            Random.step (Random.int a b) state.seed
+    in
+    ( x, CispST { state | seed = newSeed } )
+
+
+
+-- Insight one:
+{-
+   Seq.t is a state machine with only internal (hidden) state.
+
+   State.t is a state machine, but the state is explicit and external
+
+   Bus seq's require that the
+
+   map2 rvi (st 1,sideffect (~bus "casper" (rv 1 10))) (~bus "casper")
+
+
+
+   Open question:
+
+   Should the internal state be exposed ? How to combine Seq's with internal and external state?
+
+
+-}
+
+
+type alias SeqSt value state =
+    () -> Node value state
+
+
+type Node value state
+    = Cons
+        (state
+         ->
+            { value : value
+            , state : state
+            , rest : SeqSt value state
+            }
+        )
+    | Nil
+
+
+identity x =
+    x
+
+
+empty : SeqSt value state
+empty () =
+    Nil
+
+
+return : value -> SeqSt value state
+return x () =
+    Cons
+        (\state ->
+            { state = state
+            , value = x
+            , rest = empty
+            }
+        )
+
+
+map : (a -> b) -> SeqSt a state -> SeqSt b state
+map f sq () =
+    case sq () of
+        Nil ->
+            Nil
+
+        Cons statef ->
+            Cons
+                (\s ->
+                    let
+                        newState =
+                            statef s
+                    in
+                    { state = newState.state
+                    , value = f newState.value
+                    , rest = map f newState.rest
+                    }
+                )
+
+
+countFrom : Int -> SeqSt Int state
+countFrom current () =
+    Cons
+        (\state ->
+            { value = current
+            , state = state
+            , rest = countFrom (current + 1)
+            }
+        )
+
+
+count : SeqSt Int state
+count =
+    countFrom 0
+
+
+fromList : List a -> SeqSt a state
+fromList lst () =
+    case lst of
+        [] ->
+            Nil
+
+        x :: xs ->
+            Cons
+                (\state ->
+                    { value = x
+                    , state = state
+                    , rest = fromList xs
+                    }
+                )
+
+
+toListSt : state -> List a -> SeqSt a state -> List a
+toListSt state acc sq =
+    case sq () of
+        Nil ->
+            List.reverse acc
+
+        Cons fs ->
+            let
+                newState =
+                    fs state
+            in
+            toListSt newState.state (newState.value :: acc) newState.rest
+
+
+map2 : (a -> b -> c) -> SeqSt a state -> SeqSt b state -> SeqSt c state
+map2 f sq1 sq2 () =
+    case sq1 () of
+        Nil ->
+            Nil
+
+        Cons state1 ->
+            case sq2 () of
+                Nil ->
+                    Nil
+
+                Cons state2 ->
+                    Cons
+                        (\s ->
+                            let
+                                newState1 =
+                                    state1 s
+
+                                newState2 =
+                                    state2 newState1.state
+
+                                finalState1 =
+                                    { newState1 | state = newState2.state }
+                            in
+                            { value = f newState1.value newState2.value
+                            , state = newState2.state
+                            , rest = map2 f finalState1.rest newState2.rest
+                            }
+                        )
+
+
+map2st : (a -> b -> (state -> ( c, state ))) -> SeqSt a state -> SeqSt b state -> SeqSt c state
+map2st f sq1 sq2 () =
+    case sq1 () of
+        Nil ->
+            Nil
+
+        Cons state1 ->
+            case sq2 () of
+                Nil ->
+                    Nil
+
+                Cons state2 ->
+                    Cons
+                        (\s ->
+                            let
+                                newState1 =
+                                    state1 s
+
+                                newState2 =
+                                    state2 newState1.state
+
+                                ( value, finalState ) =
+                                    f newState1.value newState2.value newState2.state
+                            in
+                            { value = value
+                            , state = finalState
+                            , rest = map2st f newState1.rest newState2.rest
+                            }
+                        ) 
+
+
+rv2 : SeqSt Int CispST -> SeqSt Int CispST -> SeqSt Int CispST
+rv2 asq bsq =
+    map2st generateRandom asq bsq
+
+
 initState : Int -> CispST
 initState initialSeed =
     CispST { seed = Random.initialSeed initialSeed, dict = Dict.empty }
@@ -22,11 +220,11 @@ initState initialSeed =
 
 
 -- State return, just takes an s and embeds it into a state transformer
+-- What if we use the TEA model, where there is a running machine that we send message to if we need it.
 
 
-type  Value
-    = V Int
-    | Compute (State CispST Int)
+type alias Value =
+    State CispST Int
 
 
 rv : Int -> Int -> Value
@@ -43,45 +241,33 @@ rv a b =
         rst =
             State.advance f
     in
-    Compute rst
+    rst
 
 
 toList : CispST -> Seq Value -> List Int
 toList state sq =
-    let
-        states =
-            Seq.map
-                (\value ->
-                    case value of
-                        V i ->
-                            State.state i
+    State.finalValue state (sq |> Seq.toList |> State.combine)
 
-                        Compute st ->
-                            st
-                )
-                sq
-    in
-    State.finalValue state (states |> Seq.toList |> State.combine)
+
+i : Int -> Value
+i x =
+    State.state x
 
 
 myList =
-    [ V 3, V 9, V 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle
-
-
-
-                    
+    [ i 3, i 9, i 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle
 
 
 lstA =
-    [ 1, 2, 3, 4 ] |> List.map V |> Seq.fromList |> Seq.cycle
+    [ 1, 2, 3, 4 ] |> List.map i |> Seq.fromList |> Seq.cycle
 
 
 lstB =
-    [ 33, 22, 11 ] |> List.map V |> Seq.fromList |> Seq.cycle
+    [ 33, 22, 11 ] |> List.map i |> Seq.fromList |> Seq.cycle
 
 
 lstC =
-    [ 100, 200, 300, 400, 500 ] |> List.map V |> Seq.fromList |> Seq.cycle
+    [ 100, 200, 300, 400, 500 ] |> List.map i |> Seq.fromList |> Seq.cycle
 
 
 combi : List Int
