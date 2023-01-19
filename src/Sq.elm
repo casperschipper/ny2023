@@ -79,6 +79,18 @@ return x () =
             }
         )
 
+cons : value -> SeqSt value state -> SeqSt value state
+cons x seq () = 
+    Cons (\state ->
+        {
+            state = state
+            , value = x
+            , rest = seq
+        })
+
+
+            
+
 
 map : (a -> b) -> SeqSt a state -> SeqSt b state
 map f sq () =
@@ -132,8 +144,8 @@ fromList lst () =
                 )
 
 
-toListSt : state -> List a -> SeqSt a state -> List a
-toListSt state acc sq =
+toListHelper : state -> List a -> SeqSt a state -> List a
+toListHelper state acc sq =
     case sq () of
         Nil ->
             List.reverse acc
@@ -143,7 +155,12 @@ toListSt state acc sq =
                 newState =
                     fs state
             in
-            toListSt newState.state (newState.value :: acc) newState.rest
+            toListHelper newState.state (newState.value :: acc) newState.rest
+
+
+toListWithState : state -> SeqSt a state -> List a
+toListWithState state sq =
+    toListHelper state [] sq
 
 
 map2 : (a -> b -> c) -> SeqSt a state -> SeqSt b state -> SeqSt c state
@@ -205,12 +222,103 @@ map2st f sq1 sq2 () =
                             , state = finalState
                             , rest = map2st f newState1.rest newState2.rest
                             }
-                        ) 
+                        )
 
 
-rv2 : SeqSt Int CispST -> SeqSt Int CispST -> SeqSt Int CispST
-rv2 asq bsq =
+rv : SeqSt Int CispST -> SeqSt Int CispST -> SeqSt Int CispST
+rv asq bsq =
     map2st generateRandom asq bsq
+
+
+append : SeqSt a state -> SeqSt a state -> SeqSt a state
+append s1 s2 () =
+    case s1 () of
+        Nil ->
+            s2 ()
+
+        Cons fs ->
+            Cons
+                (\s ->
+                    let
+                        newState =
+                            fs s
+                    in
+                    { newState
+                        | rest = append newState.rest s2
+                    }
+                )
+
+
+cycle_nonempty : SeqSt a state -> SeqSt a state
+cycle_nonempty xs () =
+    append xs (cycle_nonempty xs) ()
+
+
+cycle : SeqSt a state -> SeqSt a state
+cycle sq () =
+    case sq () of
+        Nil ->
+            -- to prevent infinite loop
+            Nil
+
+        Cons _ ->
+            cycle_nonempty sq ()
+
+
+take : Int -> SeqSt a state -> SeqSt a state
+take n sq () =
+    if n < 1 then
+        Nil
+
+    else
+        case sq () of
+            Nil ->
+                Nil
+
+            Cons fs ->
+                Cons
+                    (\s ->
+                        let
+                            newstate =
+                                fs s
+                        in
+                        { newstate
+                            | rest = take (n - 1) newstate.rest
+                        }
+                    )
+
+{-
+concat : SeqSt (SeqSt a state) state -> SeqSt a state
+concat sqq () =
+    case sqq () of
+        Nil ->
+            Nil
+
+        Cons fs ->
+            Cons
+                (\s ->
+                    let
+                        newState =
+                            fs s
+
+                        
+                    in
+                    {
+                        newState |
+                        rest = append newState.rest (concat )
+                    }
+                )-}
+
+
+
+{- not tail recursive
+   case sqq () of
+       Nil ->
+           Nil
+
+       Cons x tail ->
+           append x (concat tail) ()
+-}
 
 
 initState : Int -> CispST
@@ -219,61 +327,64 @@ initState initialSeed =
 
 
 
--- State return, just takes an s and embeds it into a state transformer
--- What if we use the TEA model, where there is a running machine that we send message to if we need it.
+{-
+
+   -- State return, just takes an s and embeds it into a state transformer
+   -- What if we use the TEA model, where there is a running machine that we send message to if we need it.
 
 
-type alias Value =
-    State CispST Int
+   type alias Value =
+       State CispST Int
 
 
-rv : Int -> Int -> Value
-rv a b =
-    let
-        gen =
-            Random.int a b
+   rv : Int -> Int -> Value
+   rv a b =
+       let
+           gen =
+               Random.int a b
 
-        f : CispST -> ( Int, CispST )
-        f (CispST st) =
-            Random.step gen st.seed |> (\( value, newSeed ) -> ( value, CispST { st | seed = newSeed } ))
+           f : CispST -> ( Int, CispST )
+           f (CispST st) =
+               Random.step gen st.seed |> (\( value, newSeed ) -> ( value, CispST { st | seed = newSeed } ))
 
-        rst : State CispST Int
-        rst =
-            State.advance f
-    in
-    rst
-
-
-toList : CispST -> Seq Value -> List Int
-toList state sq =
-    State.finalValue state (sq |> Seq.toList |> State.combine)
+           rst : State CispST Int
+           rst =
+               State.advance f
+       in
+       rst
 
 
-i : Int -> Value
-i x =
-    State.state x
+   toList : CispST -> Seq Value -> List Int
+   toList state sq =
+       State.finalValue state (sq |> Seq.toList |> State.combine)
 
 
-myList =
-    [ i 3, i 9, i 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle
+   i : Int -> Value
+   i x =
+       State.state x
 
 
-lstA =
-    [ 1, 2, 3, 4 ] |> List.map i |> Seq.fromList |> Seq.cycle
+   myList =
+       [ i 3, i 9, i 2, rv 10 20, rv 100 200, rv 10 200 ] |> Seq.fromList |> Seq.cycle
 
 
-lstB =
-    [ 33, 22, 11 ] |> List.map i |> Seq.fromList |> Seq.cycle
+   lstA =
+       [ 1, 2, 3, 4 ] |> List.map i |> Seq.fromList |> Seq.cycle
 
 
-lstC =
-    [ 100, 200, 300, 400, 500 ] |> List.map i |> Seq.fromList |> Seq.cycle
+   lstB =
+       [ 33, 22, 11 ] |> List.map i |> Seq.fromList |> Seq.cycle
 
 
-combi : List Int
-combi =
-    [ lstA, lstB, lstC ] |> Seq.fromList |> Seq.transpose |> Seq.concat |> Seq.take 100 |> toList (initState 3)
+   lstC =
+       [ 100, 200, 300, 400, 500 ] |> List.map i |> Seq.fromList |> Seq.cycle
+
+
+   combi : List Int
+   combi =
+       [ lstA, lstB, lstC ] |> Seq.fromList |> Seq.transpose |> Seq.concat |> Seq.take 100 |> toList (initState 3)
 
 
 
--- An infinite sequence of random number between a and b
+   -- An infinite sequence of random number between a and b
+-}
