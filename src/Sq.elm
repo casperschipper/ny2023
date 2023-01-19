@@ -79,17 +79,27 @@ return x () =
             }
         )
 
+
 cons : value -> SeqSt value state -> SeqSt value state
-cons x seq () = 
-    Cons (\state ->
-        {
-            state = state
+cons x seq () =
+    Cons
+        (\state ->
+            { state = state
             , value = x
             , rest = seq
-        })
+            }
+        )
 
 
-            
+infinite : value -> SeqSt value state
+infinite x () =
+    Cons
+        (\state ->
+            { state = state
+            , value = x
+            , rest = infinite x
+            }
+        )
 
 
 map : (a -> b) -> SeqSt a state -> SeqSt b state
@@ -287,9 +297,53 @@ take n sq () =
                         }
                     )
 
-{-
-concat : SeqSt (SeqSt a state) state -> SeqSt a state
-concat sqq () =
+
+recursive : SeqSt msg state -> (msg -> a -> a) -> a -> (a -> b) -> SeqSt b state
+recursive control update init eval () =
+    case control () of
+        Nil ->
+            Nil
+
+        Cons fs ->
+            Cons
+                (\st ->
+                    let
+                        newState =
+                            fs st
+
+                        myMsg =
+                            newState.value
+
+                        newModel =
+                            update myMsg init
+
+                        output =
+                            eval newModel
+                    in
+                    { value = output
+                    , state = newState.state
+                    , rest = recursive newState.rest update newModel eval
+                    }
+                )
+
+
+recursiveNoControl : (a -> ( value, a )) -> a -> SeqSt value state
+recursiveNoControl update init () =
+    Cons
+        (\st ->
+            let
+                ( v, model ) =
+                    update init
+            in
+            { state = st
+            , value = v
+            , rest = recursiveNoControl update model
+            }
+        )
+
+
+concat : a -> SeqSt (SeqSt a state) state -> SeqSt a state
+concat x sqq () =
     case sqq () of
         Nil ->
             Nil
@@ -301,13 +355,17 @@ concat sqq () =
                         newState =
                             fs s
 
-                        
+                        first =
+                            newState.value
+
+                        rest =
+                            newState.rest
                     in
-                    {
-                        newState |
-                        rest = append newState.rest (concat )
+                    { state = newState.state
+                    , value = x
+                    , rest = append first (concat x rest) 
                     }
-                )-}
+                )
 
 
 
