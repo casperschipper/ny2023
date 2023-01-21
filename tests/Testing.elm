@@ -15,7 +15,7 @@ sqRandomTest =
             List.range 50 100 |> List.reverse |> Sq.fromList
 
         foobar =
-            Sq.map2st Sq.generateRandom foo bar
+            Sq.map2 Sq.generateRandom foo bar
     in
     foobar |> Sq.toListWithState (Sq.initState 0)
 
