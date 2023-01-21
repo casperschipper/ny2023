@@ -173,39 +173,9 @@ toListWithState state sq =
     toListHelper state [] sq
 
 
-map2 : (a -> b -> c) -> SeqSt a state -> SeqSt b state -> SeqSt c state
+
+map2 : (a -> b -> (state -> ( c, state ))) -> SeqSt a state -> SeqSt b state -> SeqSt c state
 map2 f sq1 sq2 () =
-    case sq1 () of
-        Nil ->
-            Nil
-
-        Cons state1 ->
-            case sq2 () of
-                Nil ->
-                    Nil
-
-                Cons state2 ->
-                    Cons
-                        (\s ->
-                            let
-                                newState1 =
-                                    state1 s
-
-                                newState2 =
-                                    state2 newState1.state
-
-                                finalState1 =
-                                    { newState1 | state = newState2.state }
-                            in
-                            { value = f newState1.value newState2.value
-                            , state = newState2.state
-                            , rest = map2 f finalState1.rest newState2.rest
-                            }
-                        )
-
-
-map2st : (a -> b -> (state -> ( c, state ))) -> SeqSt a state -> SeqSt b state -> SeqSt c state
-map2st f sq1 sq2 () =
     case sq1 () of
         Nil ->
             Nil
@@ -275,6 +245,8 @@ cycle sq () =
             cycle_nonempty sq ()
 
 
+
+
 take : Int -> SeqSt a state -> SeqSt a state
 take n sq () =
     if n < 1 then
@@ -342,8 +314,12 @@ recursiveNoControl update init () =
         )
 
 
+
+{- This is a bit embarrasing but needs a default value -}
+
+
 concat : a -> SeqSt (SeqSt a state) state -> SeqSt a state
-concat x sqq () =
+concat default sqq () =
     case sqq () of
         Nil ->
             Nil
@@ -361,10 +337,22 @@ concat x sqq () =
                         rest =
                             newState.rest
                     in
-                    { state = newState.state
-                    , value = x
-                    , rest = append first (concat x rest) 
-                    }
+                    case first () of
+                        Cons fs2 ->
+                            let
+                                go =
+                                    fs2 newState.state
+                            in
+                            { value = go.value
+                            , rest = append go.rest (concat default rest)
+                            , state = go.state
+                            }
+
+                        Nil ->
+                            { value = default
+                            , state = newState.state
+                            , rest = concat default rest
+                            }
                 )
 
 
