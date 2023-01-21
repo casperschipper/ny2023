@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Sq
 import Test exposing (..)
+import State
 
 
 sqRandomTest =
@@ -15,7 +16,7 @@ sqRandomTest =
             List.range 50 100 |> List.reverse |> Sq.fromList
 
         foobar =
-            Sq.map2 Sq.generateRandom foo bar
+            Sq.map2 (\a b -> State.advance (Sq.generateRandom a b)) foo bar
     in
     foobar |> Sq.toListWithState (Sq.initState 0)
 
@@ -72,6 +73,18 @@ concatResult =
 
 
 
+zipTest =
+    let
+        foo = [1,2,3] |> Sq.fromList
+
+        bar = [4,5,6] |> Sq.fromList
+
+        zipped = Sq.zip foo bar
+    in
+    zipped |> Sq.toListWithState (Sq.initState 0)
+
+zipResult =
+    [(1,4),(2,5),(3,6)]
 
 
 sqTests =
@@ -84,4 +97,6 @@ sqTests =
             (\_ -> Expect.equal appendTest.test appendTest.result)
         , test "concat"
             (\_ -> Expect.equal concatTest concatResult)
+        , test "zip"
+            (\_ -> Expect.equal zipTest zipResult)
         ]

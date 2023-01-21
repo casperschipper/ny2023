@@ -173,7 +173,7 @@ toListWithState state sq =
     toListHelper state [] sq
 
 
-map2 : (a -> b -> (state -> ( c, state ))) -> SeqSt a state -> SeqSt b state -> SeqSt c state
+map2 : (a -> b -> State state c) -> SeqSt a state -> SeqSt b state -> SeqSt c state
 map2 f sq1 sq2 () =
     case sq1 () of
         Nil ->
@@ -195,7 +195,7 @@ map2 f sq1 sq2 () =
                                     state2 newState1.state
 
                                 ( value, finalState ) =
-                                    f newState1.value newState2.value newState2.state
+                                    f newState1.value newState2.value |> State.run newState2.state
                             in
                             { value = value
                             , state = finalState
@@ -206,7 +206,7 @@ map2 f sq1 sq2 () =
 
 rv : SeqSt Int CispST -> SeqSt Int CispST -> SeqSt Int CispST
 rv asq bsq =
-    map2 generateRandom asq bsq
+    map2 (\a b -> State.advance (generateRandom a b)) asq bsq
 
 
 append : SeqSt a state -> SeqSt a state -> SeqSt a state
@@ -351,6 +351,10 @@ concat default sqq () =
                             , rest = concat default rest
                             }
                 )
+
+
+zip =
+    map2 (\a b -> State.state (a,b))
 
 
 
